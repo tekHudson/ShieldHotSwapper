@@ -5,6 +5,7 @@
 ## Version: 0.1.0
 ## DefaultState: enabled
 ## IconTexture: Interface\AddOns\ShieldHotSwapper\Icons\Icon
+## X-Curse-Project-ID: 1669376
 ## SavedVariables: ShieldHotSwapperDB
 
 # Bootstrap (namespace, event dispatch, defaults, slash command)
