@@ -4,17 +4,15 @@ Shows your currently-equipped shield plus every shield sitting in your bags
 as a small icon grid, with live durability, so spare/resistance shields (and
 the one you're actually wearing) don't quietly go unrepaired.
 
-- The currently-equipped shield is always shown, pinned as the first icon
-  (gold outline box) - it's never hidden by hover and never gets crowded
-  out by bag shields filling the grid. Bag shields fill the rest,
+- All icons are always visible. The currently-equipped shield is always
+  shown too, placed first (gold outline box) - it never gets crowded out
+  by bag shields filling the grid. Bag shields fill the rest,
   most-damaged first.
 - Click a bag icon to equip that shield (swaps whatever's currently worn
   back into the bag), same as double-clicking it in your bags. Clicking the
   worn shield's own icon does nothing - there's nothing to swap it with.
 - Hold-click anywhere on the group (an icon or the background gap) to drag
-  the whole thing.
-- Hover the group to reveal the icons (toggleable in options); lock the
-  frame to stop accidental drags.
+  the whole thing. Lock the frame in options to stop accidental drags.
 - Two sliders under Display set the grid size: rows (1-6), columns (1-10).
 - `/sw` opens options. `/sw lock`, `/sw unlock`, `/sw reset` also work.
 

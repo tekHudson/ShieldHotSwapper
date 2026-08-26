@@ -20,7 +20,11 @@
 - Fixed: "only show icons on hover" had no effect while the frame was
   unlocked (the default state) - a boolean bug in `Frame.lua:ApplyReveal`
   meant icons were always shown regardless of the setting unless you'd
-  also locked the frame. Hover-gating now works correctly out of the box.
-- The equipped shield is now pinned as the first icon and always visible -
-  it's never hidden by hover-gating and never gets clipped out by the
-  rows/columns capacity, even if bag shields fill the rest of the grid.
+  also locked the frame.
+- Removed hover-to-reveal entirely (setting and functionality both gone,
+  per feedback: an empty box when not hovering looked bad, and hovering
+  over one icon hid the rest of the group). All icons are always visible
+  now, same as EasyMount/PallySquire.
+- The equipped shield is placed first and always visible - it never gets
+  clipped out by the rows/columns capacity, even if bag shields fill the
+  rest of the grid.

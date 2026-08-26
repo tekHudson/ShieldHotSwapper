@@ -152,9 +152,8 @@ end
 function SW:RefreshLayout()
 	if not SW.buttons then return end
 
-	-- Split the worn shield out - it's pinned as icon #1, always shown (see
-	-- Frame.lua:ApplyReveal, which only hover-gates SW.activeButtons), and
-	-- never competes with bag shields for grid capacity.
+	-- Split the worn shield out - it's placed first and never competes with
+	-- bag shields for grid capacity, so it can't get clipped out.
 	local equipped
 	local bagShields = {}
 	for _, entry in ipairs(SW.shields or {}) do
@@ -178,16 +177,13 @@ function SW:RefreshLayout()
 	local rows = math.min(MAX_ROWS, math.max(1, SW.opt.display.rows or 1))
 	local bagCapacity = math.max(0, rows * cols - (equipped and 1 or 0))
 
-	SW.pinnedButton = nil
-	SW.activeButtons = {}
 	local used = 0
 
 	if equipped then
 		local btn = SW.buttons[1]
 		fillButton(btn, equipped)
 		placeButton(btn, 0, cols)
-		btn:Show() -- always visible, regardless of hover/lock state
-		SW.pinnedButton = btn
+		btn:Show()
 		used = 1
 	end
 
@@ -195,7 +191,7 @@ function SW:RefreshLayout()
 		local btn = SW.buttons[used + 1]
 		fillButton(btn, bagShields[i])
 		placeButton(btn, used, cols)
-		SW.activeButtons[#SW.activeButtons + 1] = btn
+		btn:Show()
 		used = used + 1
 	end
 
@@ -205,14 +201,10 @@ function SW:RefreshLayout()
 	end
 
 	-- Size the frame to only what's actually filled (min one icon's worth,
-	-- so there's always something to grab/hover even with zero shields).
+	-- so there's always something to grab even with zero shields).
 	local usedCols = math.min(cols, math.max(used, 1))
 	local usedRows = math.max(1, math.ceil(math.max(used, 1) / cols))
 	SW.frame:SetSize(
 		2 * MARGIN + usedCols * (ICON + PAD) - PAD,
 		2 * MARGIN + usedRows * (ICON + PAD) - PAD)
-
-	-- Re-apply the current reveal state immediately so a bag update doesn't
-	-- flash a newly-active icon before the next hover tick.
-	if SW.ApplyReveal then SW:ApplyReveal() end
 end

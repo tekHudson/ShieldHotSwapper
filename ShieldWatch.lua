@@ -29,8 +29,7 @@ ns.MARGIN = 6
 -- Saved variables + defaults merge
 ----------------------------------------------------------------------
 local DEFAULTS = {
-	locked = false,    -- when locked, the group only reveals on hover (see UI/Frame.lua)
-	hoverOnly = true,  -- "only expose shield icons on hover"
+	locked = false,
 	pos = nil,
 	display = { rows = 1, columns = 6 },
 }

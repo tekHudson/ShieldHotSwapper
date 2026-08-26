@@ -1,6 +1,6 @@
 --[[ ShieldWatch — options panel via the modern Settings API.
 
-Settings: hover-only visibility toggle, lock toggle.
+Settings: lock toggle.
 Display: rows / columns sliders sizing the icon grid.
 
 No AceConfig/AceGUI; falls back to the legacy InterfaceOptions API on older
@@ -65,9 +65,6 @@ function SW:CreateOptions()
 
 	------------------------------------------------------------------
 	header("Settings")
-	makeCheck(panel, "Only show shield icons on hover", function() return SW.opt.hoverOnly end,
-		function(v) SW.opt.hoverOnly = v end, y)
-	y = y - 26
 	makeCheck(panel, "Lock frame position", function() return SW.opt.locked end,
 		function(v) SW.opt.locked = v end, y)
 	y = y - 34
