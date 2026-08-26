@@ -59,21 +59,37 @@ local function createButton(i)
 	durText:SetShadowColor(0, 0, 0, 1)
 	btn.durText = durText
 
+	-- "Worn" corner tag, shown only for the currently-equipped shield.
+	local worn = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	worn:SetPoint("TOPLEFT", 1, -1)
+	local wfont, wsize = worn:GetFont()
+	worn:SetFont(wfont, wsize, "THICKOUTLINE")
+	worn:SetShadowColor(0, 0, 0, 1)
+	worn:SetTextColor(0.55, 0.85, 1)
+	worn:SetText("W")
+	worn:Hide()
+	btn.worn = worn
+
 	btn:SetScript("OnEnter", function(self)
-		if not self.bag then return end
+		if not self.kind then return end
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetBagItem(self.bag, self.slot) -- native tooltip already shows durability
-		GameTooltip:AddLine(" ")
-		GameTooltip:AddLine("Click to equip", 0.6, 1, 0.6)
+		if self.kind == "equipped" then
+			GameTooltip:SetInventoryItem("player", self.invSlot) -- native tooltip already shows durability
+		else
+			GameTooltip:SetBagItem(self.bag, self.slot)
+			GameTooltip:AddLine(" ")
+			GameTooltip:AddLine("Click to equip", 0.6, 1, 0.6)
+		end
 		GameTooltip:Show()
 	end)
 	btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	-- Click to equip: same as double-clicking the item in your bags (swaps
-	-- whatever's currently worn back into the bag slot this came from).
+	-- whatever's currently worn back into the bag slot this came from). The
+	-- already-worn shield's icon is a no-op here - nothing to swap it with.
 	btn:RegisterForClicks("LeftButtonUp")
 	btn:SetScript("OnClick", function(self)
-		if not self.bag then return end
+		if self.kind ~= "bag" then return end
 		local UseItem = C_Container and C_Container.UseContainerItem or _G.UseContainerItem
 		UseItem(self.bag, self.slot)
 	end)
@@ -117,8 +133,11 @@ function SW:RefreshLayout()
 		local entry = shields[i]
 		local btn = SW.buttons[i]
 
+		btn.kind = entry.kind
 		btn.bag, btn.slot = entry.bag, entry.slot
+		btn.invSlot = entry.invSlot
 		btn.icon:SetTexture(entry.icon)
+		btn.worn:SetShown(entry.kind == "equipped")
 
 		local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1
 		btn.durText:SetText(math.floor(pct * 100 + 0.5) .. "%")
@@ -137,7 +156,7 @@ function SW:RefreshLayout()
 	end
 
 	for i = shown + 1, #SW.buttons do
-		SW.buttons[i].bag = nil
+		SW.buttons[i].kind = nil
 		SW.buttons[i]:Hide()
 	end
 

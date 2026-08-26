@@ -1,10 +1,12 @@
 --[[
-	Core/Scan.lua - bag scan, keeps SW.shields up to date.
+	Core/Scan.lua - bag + equipped-slot scan, keeps SW.shields up to date.
 
-	Rescans only on BAG_UPDATE_DELAYED (Blizzard already coalesces this into
-	one fire per batch of bag changes). A shield's durability only changes
-	while it's equipped and taking damage, so this is cheap and correct -
-	between events the icon grid just reads SW.shields from memory.
+	Rescans on BAG_UPDATE_DELAYED (Blizzard already coalesces this into one
+	fire per batch of bag changes), PLAYER_EQUIPMENT_CHANGED (a shield gets
+	equipped/unequipped), and UPDATE_INVENTORY_DURABILITY (the worn shield's
+	durability actually changes from combat damage - bag items never do,
+	since only equipped gear takes damage). Between events the icon grid
+	just reads SW.shields from memory.
 ]]
 
 local ADDON, ns = ...
@@ -20,6 +22,7 @@ local GetSlotLink = Container.GetContainerItemLink or _G.GetContainerItemLink
 local GetSlotDurability = Container.GetContainerItemDurability or _G.GetContainerItemDurability
 
 local SHIELD_EQUIP_LOC = "INVTYPE_SHIELD"
+local INVSLOT_OFFHAND = 17 -- shields only ever equip here
 
 local function slotItemID(bag, slot)
 	local info = GetSlotInfo(bag, slot)
@@ -33,13 +36,37 @@ end
 -- Scan
 ------------------------------------------------------------------------
 
--- Rebuilds SW.shields: every shield currently sitting in a bag, with its
--- live durability. Item data can arrive async on a cold cache (server just
--- sent the item ID, name/equip-loc not cached yet) - when that happens we
--- register GET_ITEM_INFO_RECEIVED once and rescan when it fires.
+-- The currently-worn shield, if any. Returns (entry, pending) - pending
+-- means the item's cached data hasn't arrived yet, same as the bag case.
+local function scanEquipped()
+	local itemID = GetInventoryItemID("player", INVSLOT_OFFHAND)
+	if not itemID then return nil, false end
+
+	local name, link, _, _, _, _, _, _, equipLoc, texture = GetItemInfo(itemID)
+	if not name then return nil, true end
+	if equipLoc ~= SHIELD_EQUIP_LOC then return nil, false end
+
+	local durability, maxDurability = GetInventoryItemDurability(INVSLOT_OFFHAND)
+	return {
+		kind = "equipped", invSlot = INVSLOT_OFFHAND, itemID = itemID, link = link,
+		icon = texture,
+		durability = durability or 1,
+		maxDurability = maxDurability or 1,
+	}, false
+end
+
+-- Rebuilds SW.shields: the worn shield (if any) plus every shield sitting
+-- in a bag, with live durability. Item data can arrive async on a cold
+-- cache (server just sent the item ID, name/equip-loc not cached yet) -
+-- when that happens we register GET_ITEM_INFO_RECEIVED once and rescan
+-- when it fires.
 function SW:ScanShields()
 	local found = {}
 	local pending = false
+
+	local equipped, eqPending = scanEquipped()
+	if equipped then found[#found + 1] = equipped end
+	if eqPending then pending = true end
 
 	for bag = 0, 4 do
 		local slots = GetNumSlots and GetNumSlots(bag) or 0
@@ -52,7 +79,7 @@ function SW:ScanShields()
 				elseif equipLoc == SHIELD_EQUIP_LOC then
 					local durability, maxDurability = GetSlotDurability(bag, slot)
 					found[#found + 1] = {
-						bag = bag, slot = slot, itemID = itemID, link = link,
+						kind = "bag", bag = bag, slot = slot, itemID = itemID, link = link,
 						icon = texture,
 						durability = durability or 1,
 						maxDurability = maxDurability or 1,
@@ -79,9 +106,19 @@ end
 
 function SW:InitScan()
 	SW:RegisterEvent("BAG_UPDATE_DELAYED")
+	SW:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+	SW:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 	SW:ScanShields()
 end
 
 function SW:BAG_UPDATE_DELAYED()
+	SW:ScanShields()
+end
+
+function SW:PLAYER_EQUIPMENT_CHANGED()
+	SW:ScanShields()
+end
+
+function SW:UPDATE_INVENTORY_DURABILITY()
 	SW:ScanShields()
 end

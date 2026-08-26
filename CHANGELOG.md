@@ -11,3 +11,8 @@
 - Fixed: the frame no longer reserves space for the full rows x columns
   grid regardless of how many shields you actually have - it now sizes to
   fit only what's currently shown.
+- The currently-equipped shield now shows in the grid too (marked with a
+  "W" tag), not just ones sitting in bags - its durability actually changes
+  from combat, so it's the one most worth watching. Rescans on
+  `PLAYER_EQUIPMENT_CHANGED` and `UPDATE_INVENTORY_DURABILITY` in addition
+  to bag updates.
