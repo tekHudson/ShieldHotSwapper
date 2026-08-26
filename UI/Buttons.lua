@@ -156,10 +156,16 @@ function SW:RefreshLayout()
 	if not SW.buttons then return end
 	local shields = SW.shields or {}
 
+	-- table.sort isn't stable: when two shields tie on durability (the
+	-- common case - most are undamaged), Lua is free to order them
+	-- differently between calls even though neither value changed, which
+	-- looked exactly like icons swapping positions on equip. itemID as a
+	-- tiebreaker makes equal-durability items sort the same way every time.
 	table.sort(shields, function(a, b)
 		local pa = a.maxDurability > 0 and a.durability / a.maxDurability or 1
 		local pb = b.maxDurability > 0 and b.durability / b.maxDurability or 1
-		return pa < pb
+		if pa ~= pb then return pa < pb end
+		return a.itemID < b.itemID
 	end)
 
 	-- "columns" is the wrap width; "rows" caps how many rows will ever be

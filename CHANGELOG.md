@@ -35,3 +35,10 @@
   durability doesn't change the instant you equip something, its position
   doesn't move either - only the gold outline box jumps to mark whichever
   icon is currently worn.
+- Fixed: icons were still visibly swapping positions on equip even after
+  the above change, because `table.sort` isn't stable and every shield
+  usually ties at 100% durability - Lua is free to reorder equal-valued
+  items differently depending on their input order, and equipping changes
+  that input order (the newly-worn item leaves the bag scan, the
+  previously-worn one re-enters it at some bag slot). Added itemID as a
+  tiebreaker so equal-durability shields sort the same way every time.
