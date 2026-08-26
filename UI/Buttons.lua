@@ -123,8 +123,11 @@ function SW:CreateButtons()
 end
 
 ----------------------------------------------------------------------
--- Layout: the worn shield (if any) is pinned first and always shown;
--- remaining bag shields fill the rest of the grid, most-damaged first.
+-- Layout: one pool of icons (every shield you own, worn or in a bag),
+-- sorted most-damaged first. Equipping a shield doesn't reshuffle icon
+-- positions - durability doesn't change the instant you equip something,
+-- so an item's sort position doesn't move either. Only the gold outline
+-- box (see fillButton) jumps to mark whichever icon is now worn.
 ----------------------------------------------------------------------
 local function fillButton(btn, entry)
 	btn.kind = entry.kind
@@ -151,46 +154,44 @@ end
 
 function SW:RefreshLayout()
 	if not SW.buttons then return end
+	local shields = SW.shields or {}
 
-	-- Split the worn shield out - it's placed first and never competes with
-	-- bag shields for grid capacity, so it can't get clipped out.
-	local equipped
-	local bagShields = {}
-	for _, entry in ipairs(SW.shields or {}) do
-		if entry.kind == "equipped" then
-			equipped = entry
-		else
-			bagShields[#bagShields + 1] = entry
-		end
-	end
-
-	table.sort(bagShields, function(a, b)
+	table.sort(shields, function(a, b)
 		local pa = a.maxDurability > 0 and a.durability / a.maxDurability or 1
 		local pb = b.maxDurability > 0 and b.durability / b.maxDurability or 1
 		return pa < pb
 	end)
 
-	-- "columns" is the wrap width; "rows" caps how many rows of shields will
-	-- ever be shown (most-damaged bag shield first fills the remaining
-	-- capacity, the rest are clipped - the worn shield is never clipped).
+	-- "columns" is the wrap width; "rows" caps how many rows will ever be
+	-- shown (most-damaged shield first fills the grid, the rest are
+	-- clipped).
 	local cols = math.min(MAX_COLUMNS, math.max(1, SW.opt.display.columns or MAX_COLUMNS))
 	local rows = math.min(MAX_ROWS, math.max(1, SW.opt.display.rows or 1))
-	local bagCapacity = math.max(0, rows * cols - (equipped and 1 or 0))
+	local capacity = rows * cols
 
-	local used = 0
-
-	if equipped then
-		local btn = SW.buttons[1]
-		fillButton(btn, equipped)
-		placeButton(btn, 0, cols)
-		btn:Show()
-		used = 1
+	-- Never let the worn shield get clipped out, even if enough
+	-- badly-damaged bag shields exist to otherwise push it past the cutoff -
+	-- it's the one most worth always being able to see.
+	local shown = {}
+	local sawEquipped = false
+	for i = 1, math.min(capacity, #shields) do
+		shown[#shown + 1] = shields[i]
+		if shields[i].kind == "equipped" then sawEquipped = true end
+	end
+	if not sawEquipped then
+		for _, entry in ipairs(shields) do
+			if entry.kind == "equipped" then
+				shown[math.max(#shown, 1)] = entry
+				break
+			end
+		end
 	end
 
-	for i = 1, math.min(bagCapacity, #bagShields) do
-		local btn = SW.buttons[used + 1]
-		fillButton(btn, bagShields[i])
-		placeButton(btn, used, cols)
+	local used = 0
+	for i, entry in ipairs(shown) do
+		local btn = SW.buttons[i]
+		fillButton(btn, entry)
+		placeButton(btn, i - 1, cols)
 		btn:Show()
 		used = used + 1
 	end

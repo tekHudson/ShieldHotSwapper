@@ -25,6 +25,13 @@
   per feedback: an empty box when not hovering looked bad, and hovering
   over one icon hid the rest of the group). All icons are always visible
   now, same as EasyMount/PallySquire.
-- The equipped shield is placed first and always visible - it never gets
-  clipped out by the rows/columns capacity, even if bag shields fill the
-  rest of the grid.
+- The equipped shield is always visible - it never gets clipped out by the
+  rows/columns capacity, even if bag shields fill the rest of the grid.
+- Changed how the equipped shield is represented: instead of pinning it as
+  a separate first icon (which reshuffled the rest of the grid every time
+  you equipped something - the previously-worn shield would jump into the
+  bag-sorted list and the newly-worn one would jump to the front), it's
+  now just one shield in the same sorted pool as everything else. Since
+  durability doesn't change the instant you equip something, its position
+  doesn't move either - only the gold outline box jumps to mark whichever
+  icon is currently worn.
