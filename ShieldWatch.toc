@@ -1,0 +1,19 @@
+## Interface: 11509
+## Title: ShieldWatch
+## Notes: Shows every shield in your bags with live durability at a glance. Hold to drag, hover to reveal.
+## Author: tek
+## Version: 0.1.0
+## DefaultState: enabled
+## IconTexture: Interface\AddOns\ShieldWatch\Icons\Icon
+## SavedVariables: ShieldWatchDB
+
+# Bootstrap (namespace, event dispatch, defaults, slash command)
+ShieldWatch.lua
+
+# Core
+Core\Scan.lua
+
+# UI (pure Lua, no XML)
+UI\Frame.lua
+UI\Buttons.lua
+UI\Options.lua
