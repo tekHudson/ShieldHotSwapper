@@ -1,4 +1,4 @@
---[[ ShieldWatch — icon grid: pool of plain (non-secure) buttons, one per
+--[[ ShieldHotSwapper — icon grid: pool of plain (non-secure) buttons, one per
 displayed shield, laid out into the rows x columns grid from options.
 
 No casting happens here, so these are ordinary Buttons, not
@@ -34,7 +34,7 @@ local function onDragStop()
 end
 
 local function createButton(i)
-	local btn = CreateFrame("Button", "ShieldWatchIcon" .. i, SW.frame)
+	local btn = CreateFrame("Button", "ShieldHotSwapperIcon" .. i, SW.frame)
 	btn:SetSize(ICON, ICON)
 	btn:EnableMouse(true)
 	btn:RegisterForDrag("LeftButton")
@@ -159,7 +159,7 @@ function SW:RefreshLayout()
 	-- table.sort isn't stable: when two shields tie on durability (the
 	-- common case - most are undamaged), Lua is free to order them
 	-- differently between calls even though neither value changed. guid
-	-- (Core/Scan.lua: a per-physical-item identity, confirmed via /sw dump
+	-- (Core/Scan.lua: a per-physical-item identity, confirmed via /shs dump
 	-- to stay fixed across an equip/unequip location change, unlike
 	-- bag/slot) fixes this completely - sorting by it means the grid's
 	-- order never changes just because something got equipped, including

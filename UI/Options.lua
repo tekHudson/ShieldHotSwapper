@@ -1,4 +1,4 @@
---[[ ShieldWatch — options panel via the modern Settings API.
+--[[ ShieldHotSwapper — options panel via the modern Settings API.
 
 Settings: lock toggle.
 Display: rows / columns sliders sizing the icon grid.
@@ -20,7 +20,7 @@ local function makeCheck(parent, label, get, set, y)
 end
 
 local function makeSlider(parent, name, label, lo, hi, get, set, y)
-	local slider = CreateFrame("Slider", "ShieldWatch" .. name .. "Slider", parent, "OptionsSliderTemplate")
+	local slider = CreateFrame("Slider", "ShieldHotSwapper" .. name .. "Slider", parent, "OptionsSliderTemplate")
 	slider:SetPoint("TOPLEFT", 26, y)
 	slider:SetMinMaxValues(lo, hi)
 	slider:SetValueStep(1)
@@ -39,12 +39,12 @@ local function makeSlider(parent, name, label, lo, hi, get, set, y)
 end
 
 function SW:CreateOptions()
-	local panel = CreateFrame("Frame", "ShieldWatchOptionsPanel", UIParent)
-	panel.name = "ShieldWatch"
+	local panel = CreateFrame("Frame", "ShieldHotSwapperOptionsPanel", UIParent)
+	panel.name = "ShieldHotSwapper"
 
 	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 16, -16)
-	title:SetText("ShieldWatch")
+	title:SetText("ShieldHotSwapper")
 
 	local sub = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 	sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
@@ -81,7 +81,7 @@ function SW:CreateOptions()
 	y = y - 48
 
 	if Settings and Settings.RegisterCanvasLayoutCategory then
-		local category = Settings.RegisterCanvasLayoutCategory(panel, "ShieldWatch")
+		local category = Settings.RegisterCanvasLayoutCategory(panel, "ShieldHotSwapper")
 		Settings.RegisterAddOnCategory(category)
 		SW.optionsCategory = category
 	elseif InterfaceOptions_AddCategory then

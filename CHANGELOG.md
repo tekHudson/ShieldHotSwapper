@@ -45,11 +45,11 @@
 - Fixed: owning two genuinely identical shields (same itemID, same
   durability) could still flip which of the two slots showed the gold
   box, since itemID alone doesn't distinguish them. Confirmed (via the new
-  `/sw dump`, live in-game data) that `C_Item.GetItemGUID` works on this
+  `/shs dump`, live in-game data) that `C_Item.GetItemGUID` works on this
   client and gives each physical item a distinct, stable ID that stays the
   same across an equip/unequip location change. Sorting now uses that as
   the tiebreaker, so the grid's order genuinely never changes just because
   something got equipped - only the gold box moves - even for duplicates.
-- Added `/sw dump`: a copyable text dump of everything read off each
+- Added `/shs dump`: a copyable text dump of everything read off each
   shield (itemID, link, durability, item GUID), for diagnosing edge cases
   like the above.

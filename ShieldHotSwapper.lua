@@ -1,4 +1,4 @@
---[[ ShieldWatch — bootstrap, shared namespace, defaults, event dispatch.
+--[[ ShieldHotSwapper — bootstrap, shared namespace, defaults, event dispatch.
 
 Shows every shield sitting in your bags as a small icon grid, with live
 durability so spare/resistance shields don't quietly go unrepaired. Classic
@@ -10,7 +10,7 @@ local ADDON, ns = ...
 -- The public object. Modules hang methods off this; the event frame below
 -- dispatches WoW events to same-named methods (e.g. SW:BAG_UPDATE_DELAYED).
 local SW = {}
-_G.ShieldWatch = SW
+_G.ShieldHotSwapper = SW
 ns.SW = SW
 ns.ADDON = ADDON
 
@@ -49,7 +49,7 @@ end
 ----------------------------------------------------------------------
 -- Output helper
 ----------------------------------------------------------------------
-local PREFIX = "|cffff9832ShieldWatch:|r "
+local PREFIX = "|cffff9832ShieldHotSwapper:|r "
 function SW:Print(...)
 	print(PREFIX .. strjoin(" ", tostringall(...)))
 end
@@ -57,7 +57,7 @@ end
 ----------------------------------------------------------------------
 -- Event dispatch: SW:RegisterEvent("X") -> calls SW:X(event, ...)
 ----------------------------------------------------------------------
-local frame = CreateFrame("Frame", "ShieldWatchEventFrame")
+local frame = CreateFrame("Frame", "ShieldHotSwapperEventFrame")
 ns.eventFrame = frame
 local registered = {}
 
@@ -91,8 +91,8 @@ frame:RegisterEvent("PLAYER_LOGIN")
 function SW:ADDON_LOADED(_, name)
 	if name ~= ADDON then return end
 	SW:UnregisterEvent("ADDON_LOADED")
-	ShieldWatchDB = ShieldWatchDB or {}
-	SW.opt = mergeDefaults(ShieldWatchDB, DEFAULTS)
+	ShieldHotSwapperDB = ShieldHotSwapperDB or {}
+	SW.opt = mergeDefaults(ShieldHotSwapperDB, DEFAULTS)
 end
 
 function SW:PLAYER_LOGIN()
@@ -100,16 +100,16 @@ function SW:PLAYER_LOGIN()
 	SW:InitUI()     -- UI/Frame.lua + UI/Buttons.lua + UI/Options.lua
 
 	SW:SetupSlash()
-	SW:Print("v" .. SW.version .. " loaded. /sw for options.")
+	SW:Print("v" .. SW.version .. " loaded. /shs for options.")
 end
 
 ----------------------------------------------------------------------
 -- Slash commands
 ----------------------------------------------------------------------
 function SW:SetupSlash()
-	SLASH_SHIELDWATCH1 = "/shieldwatch"
-	SLASH_SHIELDWATCH2 = "/sw"
-	_G.SlashCmdList["SHIELDWATCH"] = function(msg)
+	SLASH_SHIELDHOTSWAPPER1 = "/shieldhotswapper"
+	SLASH_SHIELDHOTSWAPPER2 = "/shs"
+	_G.SlashCmdList["SHIELDHOTSWAPPER"] = function(msg)
 		msg = (msg or ""):lower():trim()
 		if msg == "reset" then
 			SW:ResetPosition()

@@ -1,14 +1,14 @@
 ## Interface: 11509
-## Title: ShieldWatch
+## Title: ShieldHotSwapper
 ## Notes: Shows every shield you own (worn or in bags) with live durability at a glance. Hold to drag.
 ## Author: tek
 ## Version: 0.1.0
 ## DefaultState: enabled
-## IconTexture: Interface\AddOns\ShieldWatch\Icons\Icon
-## SavedVariables: ShieldWatchDB
+## IconTexture: Interface\AddOns\ShieldHotSwapper\Icons\Icon
+## SavedVariables: ShieldHotSwapperDB
 
 # Bootstrap (namespace, event dispatch, defaults, slash command)
-ShieldWatch.lua
+ShieldHotSwapper.lua
 
 # Core
 Core\Scan.lua

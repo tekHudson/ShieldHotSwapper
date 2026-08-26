@@ -1,4 +1,4 @@
-package-as: ShieldWatch
+package-as: ShieldHotSwapper
 
 enable-nolib-creation: no
 

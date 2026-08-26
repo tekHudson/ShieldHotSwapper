@@ -1,4 +1,4 @@
---[[ ShieldWatch — movable container frame.
+--[[ ShieldHotSwapper — movable container frame.
 
 Pure Lua (no XML). Icons are always visible (no hover-to-reveal - tried
 that, Tek didn't like it: an empty reserved box when not hovering, and no
@@ -20,7 +20,7 @@ local function savePos(f)
 end
 
 function SW:CreateMainFrame()
-	local f = CreateFrame("Frame", "ShieldWatchFrame", UIParent, "BackdropTemplate")
+	local f = CreateFrame("Frame", "ShieldHotSwapperFrame", UIParent, "BackdropTemplate")
 	f:SetSize(ICON + 2 * MARGIN, ICON + 2 * MARGIN)
 	f:SetClampedToScreen(true)
 	f:SetMovable(true)

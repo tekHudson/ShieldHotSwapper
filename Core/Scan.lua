@@ -33,7 +33,7 @@ local function slotItemID(bag, slot)
 end
 
 -- Per-physical-item identity, confirmed working on this client (Tek's
--- /sw dump: two identical "Bulwark of Ire" shields returned distinct GUIDs,
+-- /shs dump: two identical "Bulwark of Ire" shields returned distinct GUIDs,
 -- and an item's GUID stayed put across an equip/unequip location change).
 -- Lets UI/Buttons.lua sort by something that never changes just because a
 -- shield got equipped, unlike bag/slot which does. Best-effort: pcall'd

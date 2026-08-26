@@ -1,4 +1,4 @@
---[[ ShieldWatch — /sw dump: raw per-shield data in a copyable text box.
+--[[ ShieldHotSwapper — /shs dump: raw per-shield data in a copyable text box.
 
 Diagnostic tool, not part of the addon's normal feature set. Lists
 everything we can read off each shield (worn + bagged) - itemID, full
@@ -40,7 +40,7 @@ end
 
 local function buildText()
 	local lines = {}
-	lines[#lines + 1] = "ShieldWatch debug dump - " .. date("%Y-%m-%d %H:%M:%S")
+	lines[#lines + 1] = "ShieldHotSwapper debug dump - " .. date("%Y-%m-%d %H:%M:%S")
 	lines[#lines + 1] = ""
 
 	local shields = SW.shields or {}
@@ -70,7 +70,7 @@ end
 local dumpFrame
 
 local function createDumpFrame()
-	local f = CreateFrame("Frame", "ShieldWatchDumpFrame", UIParent, "BackdropTemplate")
+	local f = CreateFrame("Frame", "ShieldHotSwapperDumpFrame", UIParent, "BackdropTemplate")
 	f:SetSize(600, 440)
 	f:SetPoint("CENTER")
 	f:SetFrameStrata("DIALOG")
@@ -91,9 +91,9 @@ local function createDumpFrame()
 
 	local title = f:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	title:SetPoint("TOP", 0, -16)
-	title:SetText("ShieldWatch debug dump - select all, copy, paste back")
+	title:SetText("ShieldHotSwapper debug dump - select all, copy, paste back")
 
-	local scroll = CreateFrame("ScrollFrame", "ShieldWatchDumpScroll", f, "UIPanelScrollFrameTemplate")
+	local scroll = CreateFrame("ScrollFrame", "ShieldHotSwapperDumpScroll", f, "UIPanelScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 16, -40)
 	scroll:SetPoint("BOTTOMRIGHT", -32, 16)
 
