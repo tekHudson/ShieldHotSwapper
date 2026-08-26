@@ -67,8 +67,11 @@ function SW:InitHover()
 	-- Always re-syncs button visibility (cheap - a handful of icons, and
 	-- RefreshLayout needs a freshly-laid-out button revealed immediately
 	-- even when the overall show/hide state hasn't changed since last tick).
+	-- Only SW.activeButtons (bag shields) are hover-gated; SW.pinnedButton
+	-- (the equipped shield, if any - see UI/Buttons.lua) is always shown
+	-- and never touched here.
 	function SW:ApplyReveal()
-		local show = (not SW.opt.hoverOnly) or (not SW.opt.locked) or SW.frame:IsMouseOver()
+		local show = (not SW.opt.hoverOnly) or SW.frame:IsMouseOver()
 
 		for _, btn in ipairs(SW.activeButtons or {}) do
 			btn:SetShown(show)

@@ -123,65 +123,91 @@ function SW:CreateButtons()
 end
 
 ----------------------------------------------------------------------
--- Layout: place shields into the configured grid, most-damaged first.
+-- Layout: the worn shield (if any) is pinned first and always shown;
+-- remaining bag shields fill the rest of the grid, most-damaged first.
 ----------------------------------------------------------------------
+local function fillButton(btn, entry)
+	btn.kind = entry.kind
+	btn.bag, btn.slot = entry.bag, entry.slot
+	btn.invSlot = entry.invSlot
+	btn.icon:SetTexture(entry.icon)
+	local isWorn = entry.kind == "equipped"
+	for _, t in pairs(btn.worn) do t:SetShown(isWorn) end
+
+	local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1
+	btn.durText:SetText(math.floor(pct * 100 + 0.5) .. "%")
+	local r, g, b = durabilityColor(pct)
+	btn.durText:SetTextColor(r, g, b)
+	btn.ring:SetColorTexture(r, g, b, 1)
+end
+
+local function placeButton(btn, index, cols)
+	local col = index - cols * math.floor(index / cols)
+	local row = math.floor(index / cols)
+	btn:ClearAllPoints()
+	btn:SetPoint("TOPLEFT", SW.frame, "TOPLEFT",
+		MARGIN + col * (ICON + PAD), -MARGIN - row * (ICON + PAD))
+end
+
 function SW:RefreshLayout()
 	if not SW.buttons then return end
-	local shields = SW.shields or {}
 
-	table.sort(shields, function(a, b)
+	-- Split the worn shield out - it's pinned as icon #1, always shown (see
+	-- Frame.lua:ApplyReveal, which only hover-gates SW.activeButtons), and
+	-- never competes with bag shields for grid capacity.
+	local equipped
+	local bagShields = {}
+	for _, entry in ipairs(SW.shields or {}) do
+		if entry.kind == "equipped" then
+			equipped = entry
+		else
+			bagShields[#bagShields + 1] = entry
+		end
+	end
+
+	table.sort(bagShields, function(a, b)
 		local pa = a.maxDurability > 0 and a.durability / a.maxDurability or 1
 		local pb = b.maxDurability > 0 and b.durability / b.maxDurability or 1
 		return pa < pb
 	end)
 
 	-- "columns" is the wrap width; "rows" caps how many rows of shields will
-	-- ever be shown (most-damaged first fills the grid, the rest are
-	-- clipped). The frame itself is sized to what's actually filled below,
-	-- not to this full capacity, so there's no dead space when you have
-	-- fewer shields than the grid could hold.
+	-- ever be shown (most-damaged bag shield first fills the remaining
+	-- capacity, the rest are clipped - the worn shield is never clipped).
 	local cols = math.min(MAX_COLUMNS, math.max(1, SW.opt.display.columns or MAX_COLUMNS))
 	local rows = math.min(MAX_ROWS, math.max(1, SW.opt.display.rows or 1))
-	local capacity = rows * cols
+	local bagCapacity = math.max(0, rows * cols - (equipped and 1 or 0))
 
+	SW.pinnedButton = nil
 	SW.activeButtons = {}
-	local shown = 0
-	for i = 1, math.min(capacity, #shields) do
-		local entry = shields[i]
-		local btn = SW.buttons[i]
+	local used = 0
 
-		btn.kind = entry.kind
-		btn.bag, btn.slot = entry.bag, entry.slot
-		btn.invSlot = entry.invSlot
-		btn.icon:SetTexture(entry.icon)
-		local isWorn = entry.kind == "equipped"
-		for _, t in pairs(btn.worn) do t:SetShown(isWorn) end
-
-		local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1
-		btn.durText:SetText(math.floor(pct * 100 + 0.5) .. "%")
-		local r, g, b = durabilityColor(pct)
-		btn.durText:SetTextColor(r, g, b)
-		btn.ring:SetColorTexture(r, g, b, 1)
-
-		local col = i - 1 - cols * math.floor((i - 1) / cols)
-		local row = math.floor((i - 1) / cols)
-		btn:ClearAllPoints()
-		btn:SetPoint("TOPLEFT", SW.frame, "TOPLEFT",
-			MARGIN + col * (ICON + PAD), -MARGIN - row * (ICON + PAD))
-
-		SW.activeButtons[#SW.activeButtons + 1] = btn
-		shown = shown + 1
+	if equipped then
+		local btn = SW.buttons[1]
+		fillButton(btn, equipped)
+		placeButton(btn, 0, cols)
+		btn:Show() -- always visible, regardless of hover/lock state
+		SW.pinnedButton = btn
+		used = 1
 	end
 
-	for i = shown + 1, #SW.buttons do
+	for i = 1, math.min(bagCapacity, #bagShields) do
+		local btn = SW.buttons[used + 1]
+		fillButton(btn, bagShields[i])
+		placeButton(btn, used, cols)
+		SW.activeButtons[#SW.activeButtons + 1] = btn
+		used = used + 1
+	end
+
+	for i = used + 1, #SW.buttons do
 		SW.buttons[i].kind = nil
 		SW.buttons[i]:Hide()
 	end
 
 	-- Size the frame to only what's actually filled (min one icon's worth,
 	-- so there's always something to grab/hover even with zero shields).
-	local usedCols = math.min(cols, math.max(shown, 1))
-	local usedRows = math.max(1, math.ceil(math.max(shown, 1) / cols))
+	local usedCols = math.min(cols, math.max(used, 1))
+	local usedRows = math.max(1, math.ceil(math.max(used, 1) / cols))
 	SW.frame:SetSize(
 		2 * MARGIN + usedCols * (ICON + PAD) - PAD,
 		2 * MARGIN + usedRows * (ICON + PAD) - PAD)

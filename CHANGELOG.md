@@ -17,3 +17,10 @@
   `UPDATE_INVENTORY_DURABILITY` in addition to bag updates.
 - Changed the equipped-shield marker from a small "W" corner tag (too easy
   to miss) to a gold outline box around the whole icon.
+- Fixed: "only show icons on hover" had no effect while the frame was
+  unlocked (the default state) - a boolean bug in `Frame.lua:ApplyReveal`
+  meant icons were always shown regardless of the setting unless you'd
+  also locked the frame. Hover-gating now works correctly out of the box.
+- The equipped shield is now pinned as the first icon and always visible -
+  it's never hidden by hover-gating and never gets clipped out by the
+  rows/columns capacity, even if bag shields fill the rest of the grid.

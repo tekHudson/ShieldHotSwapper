@@ -4,8 +4,10 @@ Shows your currently-equipped shield plus every shield sitting in your bags
 as a small icon grid, with live durability, so spare/resistance shields (and
 the one you're actually wearing) don't quietly go unrepaired.
 
-- Icons sort most-damaged shield first; the worn shield gets a gold outline
-  box around its icon.
+- The currently-equipped shield is always shown, pinned as the first icon
+  (gold outline box) - it's never hidden by hover and never gets crowded
+  out by bag shields filling the grid. Bag shields fill the rest,
+  most-damaged first.
 - Click a bag icon to equip that shield (swaps whatever's currently worn
   back into the bag), same as double-clicking it in your bags. Clicking the
   worn shield's own icon does nothing - there's nothing to swap it with.
