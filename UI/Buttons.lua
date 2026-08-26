@@ -59,15 +59,32 @@ local function createButton(i)
 	durText:SetShadowColor(0, 0, 0, 1)
 	btn.durText = durText
 
-	-- "Worn" corner tag, shown only for the currently-equipped shield.
-	local worn = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	worn:SetPoint("TOPLEFT", 1, -1)
-	local wfont, wsize = worn:GetFont()
-	worn:SetFont(wfont, wsize, "THICKOUTLINE")
-	worn:SetShadowColor(0, 0, 0, 1)
-	worn:SetTextColor(0.55, 0.85, 1)
-	worn:SetText("W")
-	worn:Hide()
+	-- Equipped-slot box: a gold outline standing outside the durability
+	-- ring, shown only for the currently-worn shield. Distinct from the
+	-- ring (which is always green/yellow/red for durability) so "this is
+	-- equipped" and "this is how damaged it is" never fight for the same
+	-- color.
+	-- Sits inside the 4px gap between icons (PAD) so it never overlaps a
+	-- neighboring icon.
+	local EQUIP_INSET, EQUIP_THICK = 2, 2
+	local EQUIP_COLOR = { 1, 0.82, 0.1 }
+	local worn = {}
+	local function edge(point1, point2)
+		local t = btn:CreateTexture(nil, "OVERLAY", nil, 1)
+		t:SetColorTexture(unpack(EQUIP_COLOR))
+		t:SetPoint(unpack(point1))
+		t:SetPoint(unpack(point2))
+		return t
+	end
+	worn.top = edge({ "TOPLEFT", -EQUIP_INSET, EQUIP_INSET }, { "TOPRIGHT", EQUIP_INSET, EQUIP_INSET })
+	worn.top:SetHeight(EQUIP_THICK)
+	worn.bottom = edge({ "BOTTOMLEFT", -EQUIP_INSET, -EQUIP_INSET }, { "BOTTOMRIGHT", EQUIP_INSET, -EQUIP_INSET })
+	worn.bottom:SetHeight(EQUIP_THICK)
+	worn.left = edge({ "TOPLEFT", -EQUIP_INSET, EQUIP_INSET }, { "BOTTOMLEFT", -EQUIP_INSET, -EQUIP_INSET })
+	worn.left:SetWidth(EQUIP_THICK)
+	worn.right = edge({ "TOPRIGHT", EQUIP_INSET, EQUIP_INSET }, { "BOTTOMRIGHT", EQUIP_INSET, -EQUIP_INSET })
+	worn.right:SetWidth(EQUIP_THICK)
+	for _, t in pairs(worn) do t:Hide() end
 	btn.worn = worn
 
 	btn:SetScript("OnEnter", function(self)
@@ -137,7 +154,8 @@ function SW:RefreshLayout()
 		btn.bag, btn.slot = entry.bag, entry.slot
 		btn.invSlot = entry.invSlot
 		btn.icon:SetTexture(entry.icon)
-		btn.worn:SetShown(entry.kind == "equipped")
+		local isWorn = entry.kind == "equipped"
+		for _, t in pairs(btn.worn) do t:SetShown(isWorn) end
 
 		local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1
 		btn.durText:SetText(math.floor(pct * 100 + 0.5) .. "%")
