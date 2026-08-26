@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "**"   # any tag, e.g. v0.0.1
-  workflow_dispatch:   # manual "Run workflow" button, for diagnosing why tag pushes weren't triggering
 
 permissions:
   contents: write   # allows creating the GitHub release
