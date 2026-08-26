@@ -32,6 +32,25 @@ local function slotItemID(bag, slot)
 	return nil
 end
 
+-- Per-physical-item identity, confirmed working on this client (Tek's
+-- /sw dump: two identical "Bulwark of Ire" shields returned distinct GUIDs,
+-- and an item's GUID stayed put across an equip/unequip location change).
+-- Lets UI/Buttons.lua sort by something that never changes just because a
+-- shield got equipped, unlike bag/slot which does. Best-effort: pcall'd
+-- since exact availability isn't guaranteed on every future client patch;
+-- nil guid falls back to itemID-only tiebreaking.
+local function itemGUID(bag, slot, invSlot)
+	if not (C_Item and C_Item.GetItemGUID and _G.ItemLocation) then return nil end
+	local ok, result = pcall(function()
+		local loc = invSlot
+			and ItemLocation:CreateFromEquipmentSlot(invSlot)
+			or ItemLocation:CreateFromBagAndSlot(bag, slot)
+		if not loc or not loc:IsValid() then return nil end
+		return C_Item.GetItemGUID(loc)
+	end)
+	return ok and result or nil
+end
+
 ------------------------------------------------------------------------
 -- Scan
 ------------------------------------------------------------------------
@@ -52,6 +71,7 @@ local function scanEquipped()
 		icon = texture,
 		durability = durability or 1,
 		maxDurability = maxDurability or 1,
+		guid = itemGUID(nil, nil, INVSLOT_OFFHAND),
 	}, false
 end
 
@@ -83,6 +103,7 @@ function SW:ScanShields()
 						icon = texture,
 						durability = durability or 1,
 						maxDurability = maxDurability or 1,
+						guid = itemGUID(bag, slot, nil),
 					}
 				end
 			end

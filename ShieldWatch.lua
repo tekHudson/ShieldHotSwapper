@@ -120,6 +120,8 @@ function SW:SetupSlash()
 		elseif msg == "unlock" then
 			SW.opt.locked = false
 			SW:Print("Unlocked.")
+		elseif msg == "dump" then
+			SW:ShowDump()
 		else
 			SW:OpenOptions()
 		end

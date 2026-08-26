@@ -158,13 +158,19 @@ function SW:RefreshLayout()
 
 	-- table.sort isn't stable: when two shields tie on durability (the
 	-- common case - most are undamaged), Lua is free to order them
-	-- differently between calls even though neither value changed, which
-	-- looked exactly like icons swapping positions on equip. itemID as a
-	-- tiebreaker makes equal-durability items sort the same way every time.
+	-- differently between calls even though neither value changed. guid
+	-- (Core/Scan.lua: a per-physical-item identity, confirmed via /sw dump
+	-- to stay fixed across an equip/unequip location change, unlike
+	-- bag/slot) fixes this completely - sorting by it means the grid's
+	-- order never changes just because something got equipped, including
+	-- for two genuinely identical shields (same itemID) where nothing else
+	-- would tell them apart. itemID is the fallback for the rare case guid
+	-- comes back nil (API unavailable).
 	table.sort(shields, function(a, b)
 		local pa = a.maxDurability > 0 and a.durability / a.maxDurability or 1
 		local pb = b.maxDurability > 0 and b.durability / b.maxDurability or 1
 		if pa ~= pb then return pa < pb end
+		if a.guid and b.guid and a.guid ~= b.guid then return a.guid < b.guid end
 		return a.itemID < b.itemID
 	end)
 

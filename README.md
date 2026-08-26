@@ -15,6 +15,9 @@ the one you're actually wearing) don't quietly go unrepaired.
   the whole thing. Lock the frame in options to stop accidental drags.
 - Two sliders under Display set the grid size: rows (1-6), columns (1-10).
 - `/sw` opens options. `/sw lock`, `/sw unlock`, `/sw reset` also work.
+  `/sw dump` opens a copyable text dump of everything read off each
+  shield (itemID, link, durability, etc.) - a diagnostic tool, not a
+  normal feature.
 
 ## Icon art
 

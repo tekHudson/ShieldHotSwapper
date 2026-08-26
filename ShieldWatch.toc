@@ -1,6 +1,6 @@
 ## Interface: 11509
 ## Title: ShieldWatch
-## Notes: Shows every shield in your bags with live durability at a glance. Hold to drag, hover to reveal.
+## Notes: Shows every shield you own (worn or in bags) with live durability at a glance. Hold to drag.
 ## Author: tek
 ## Version: 0.1.0
 ## DefaultState: enabled
@@ -17,3 +17,4 @@ Core\Scan.lua
 UI\Frame.lua
 UI\Buttons.lua
 UI\Options.lua
+UI\Debug.lua
