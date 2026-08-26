@@ -63,9 +63,20 @@ local function createButton(i)
 		if not self.bag then return end
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 		GameTooltip:SetBagItem(self.bag, self.slot) -- native tooltip already shows durability
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine("Click to equip", 0.6, 1, 0.6)
 		GameTooltip:Show()
 	end)
 	btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	-- Click to equip: same as double-clicking the item in your bags (swaps
+	-- whatever's currently worn back into the bag slot this came from).
+	btn:RegisterForClicks("LeftButtonUp")
+	btn:SetScript("OnClick", function(self)
+		if not self.bag then return end
+		local UseItem = C_Container and C_Container.UseContainerItem or _G.UseContainerItem
+		UseItem(self.bag, self.slot)
+	end)
 
 	btn:Hide()
 	return btn
@@ -91,6 +102,11 @@ function SW:RefreshLayout()
 		return pa < pb
 	end)
 
+	-- "columns" is the wrap width; "rows" caps how many rows of shields will
+	-- ever be shown (most-damaged first fills the grid, the rest are
+	-- clipped). The frame itself is sized to what's actually filled below,
+	-- not to this full capacity, so there's no dead space when you have
+	-- fewer shields than the grid could hold.
 	local cols = math.min(MAX_COLUMNS, math.max(1, SW.opt.display.columns or MAX_COLUMNS))
 	local rows = math.min(MAX_ROWS, math.max(1, SW.opt.display.rows or 1))
 	local capacity = rows * cols
@@ -125,11 +141,13 @@ function SW:RefreshLayout()
 		SW.buttons[i]:Hide()
 	end
 
-	-- Frame is sized to the full configured grid (not just what's currently
-	-- filled) so the hover/drag target stays put as shields come and go.
+	-- Size the frame to only what's actually filled (min one icon's worth,
+	-- so there's always something to grab/hover even with zero shields).
+	local usedCols = math.min(cols, math.max(shown, 1))
+	local usedRows = math.max(1, math.ceil(math.max(shown, 1) / cols))
 	SW.frame:SetSize(
-		2 * MARGIN + cols * (ICON + PAD) - PAD,
-		2 * MARGIN + rows * (ICON + PAD) - PAD)
+		2 * MARGIN + usedCols * (ICON + PAD) - PAD,
+		2 * MARGIN + usedRows * (ICON + PAD) - PAD)
 
 	-- Re-apply the current reveal state immediately so a bag update doesn't
 	-- flash a newly-active icon before the next hover tick.
