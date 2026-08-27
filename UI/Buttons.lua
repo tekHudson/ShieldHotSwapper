@@ -1,21 +1,25 @@
 --[[ ShieldHotSwapper — icon grid: pool of secure buttons, laid out as
 <equipped icon> <gap> <bag grid, rows x columns from options>.
 
-ONE layout path, no combat-time cosmetic patching. Earlier versions tried
-to keep durability numbers live-updating during combat by cosmetically
-patching buttons in place (matching fresh scan data back to buttons by
-guid, since equipping something moves it between a bag slot and the equip
-slot). That chased several real bugs (wrong click target, swapped icons,
-gold box in the wrong place, debounce timing) without fully resolving,
-and the value it bought - numbers updating mid-fight instead of the
-instant combat ends - wasn't worth the fragility. So: while
-InCombatLockdown() is true, RefreshLayout does nothing at all. The
-grid simply shows whatever it last showed before combat started, and
-catches up once combat ends (PLAYER_REGEN_ENABLED below).
+ONE layout path for WHICH shield is on WHICH icon - that reassignment
+needs secure attribute changes and repositioning, both blocked by
+InCombatLockdown(), so it only ever happens out of combat and freezes
+otherwise (RefreshLayout below), catching up the instant combat ends
+(PLAYER_REGEN_ENABLED). An earlier attempt tried to also keep icon
+*identity* in sync during combat (matching fresh scan data back to
+buttons by guid, since equipping moves an item between a bag slot and the
+equip slot) and chased several real bugs (wrong click target, swapped
+icons, a highlight box in the wrong place) without fully resolving - not
+worth it, since the equipped icon no longer needs tracking anyway (it's
+always position #1, gap, then the bag grid - position alone shows what's
+equipped, nothing to move/track).
 
-The equipped shield no longer needs a moving highlight (the gold box) to
-mark it - it's always the first icon, with a gap before the bag grid, so
-position alone tells you which one it is.
+Durability numbers/icon/color DO still update live during combat, via the
+much simpler updateDurabilityOnly() - reading and displaying data was
+never the protected part (a plain tooltip hover shows live durability in
+combat with zero special handling); it just re-reads whatever's actually
+in each button's already-assigned bag/slot right now, with no attempt to
+track a physical item across a location change.
 
 Buttons use SecureActionButtonTemplate (type2="macro", right-click) so
 click-to-equip survives combat lockdown - a plain insecure button calling
@@ -178,6 +182,40 @@ local function fillButton(btn, entry)
 	setItemAttr(btn, entry)
 end
 
+-- Combat-safe durability refresh: reading/displaying data was never the
+-- protected part (a plain tooltip hover shows live durability in combat
+-- with zero special handling - only reassigning which button represents
+-- what, and repositioning, are protected). Matches each already-placed
+-- button back to whatever's actually in ITS bag/slot (or the equip slot)
+-- right now, same as a tooltip would - no identity tracking across a
+-- location change, unlike the earlier guid-based attempt that caused real
+-- bugs. Tradeoff, accepted: if a shield gets equipped mid-combat, the
+-- bag slots that shuffle as a result may show a different physical
+-- shield's numbers on that button than before, until combat ends and
+-- RefreshLayout re-syncs everything - never wrong data, just possibly not
+-- the same physical item you were tracking a moment ago.
+local function updateDurabilityOnly()
+	local shields = SW.shields or {}
+	for _, btn in ipairs(SW.buttons) do
+		if btn.kind then
+			for _, entry in ipairs(shields) do
+				local matches = (entry.kind == btn.kind) and (
+					(entry.kind == "equipped" and entry.invSlot == btn.invSlot) or
+					(entry.kind == "bag" and entry.bag == btn.bag and entry.slot == btn.slot))
+				if matches then
+					btn.icon:SetTexture(entry.icon)
+					local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1
+					btn.durText:SetText(math.floor(pct * 100 + 0.5) .. "%")
+					local r, g, b = durabilityColor(pct)
+					btn.durText:SetTextColor(r, g, b)
+					btn.ring:SetColorTexture(r, g, b, 1)
+					break
+				end
+			end
+		end
+	end
+end
+
 function SW:RefreshLayout()
 	if not SW.buttons then return end
 
@@ -191,12 +229,13 @@ function SW:RefreshLayout()
 
 	-- Combat lockdown: secure attributes and structural changes (position,
 	-- size) on the secure icon buttons can't be touched by insecure code
-	-- while this is true. Rather than try to patch cosmetics in place (see
-	-- file header - that was a real source of bugs), just do nothing: the
-	-- grid keeps showing whatever it showed right before combat started,
-	-- and catches up the instant combat ends, via PLAYER_REGEN_ENABLED.
+	-- while this is true, so reassigning which shield is on which icon has
+	-- to wait until combat ends (PLAYER_REGEN_ENABLED). Durability numbers
+	-- still update live via updateDurabilityOnly() above - see its comment
+	-- for why that part is safe.
 	if InCombatLockdown() then
 		SW.layoutPending = true
+		updateDurabilityOnly()
 		return
 	end
 	SW.layoutPending = false

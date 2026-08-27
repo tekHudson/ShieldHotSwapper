@@ -8,16 +8,20 @@
   equip fires several events in quick succession as WoW's bag-cascade
   settles - confirmed via `/shs dump`, three items moved from one equip in
   testing - and patching cosmetics in place on every one of those risked
-  painting a partially-settled intermediate state). Per Tek's call: ditched
-  the whole "keep durability live during combat" goal, since it was the
-  entire source of the fragility. The grid now has exactly one layout
-  path - while `InCombatLockdown()` is true, `RefreshLayout` does nothing
-  at all (no cosmetic patching, no debounce, no guid re-matching); it just
-  shows whatever it showed right before combat started and catches up the
-  instant combat ends. The equipped shield no longer needs the gold
-  highlight box to mark it either - it's now always the first icon, with a
-  visual gap before the bag grid, so position alone tells you which one is
-  equipped.
+  painting a partially-settled intermediate state). Reassigning which
+  shield is on which icon now has exactly one path - it requires secure
+  attribute changes and repositioning, both blocked by
+  `InCombatLockdown()`, so it only happens out of combat and freezes
+  otherwise, catching up the instant combat ends. Durability numbers still
+  update live in combat, just via something much simpler than the earlier
+  guid-tracking attempt: reading/displaying data was never the protected
+  part (a tooltip hover shows live durability in combat with zero special
+  handling), so each icon just re-reads whatever's actually in its
+  already-assigned bag/slot right now - no identity tracking across a
+  location change, so no swap-position bug to have. The equipped shield no
+  longer needs the gold highlight box to mark it either - it's now always
+  the first icon, with a visual gap before the bag grid, so position alone
+  tells you which one is equipped.
 - Fixed: right-click-to-equip via `type="item"` couldn't reliably target a
   specific shield when you owned two genuinely identical ones (same
   itemID) - `SECURE_ACTIONS.item` (traced in `~/ws/wow-ui-source`) always

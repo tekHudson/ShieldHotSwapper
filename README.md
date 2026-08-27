@@ -26,11 +26,13 @@ one you're actually wearing) don't quietly go unrepaired.
   drags.
 - Two sliders under Display set the bag grid's size: rows (1-6), columns
   (1-10). The equipped icon is separate and doesn't count against this.
-- The grid freezes completely while you're in combat (durability numbers
-  included) - reassigning which shield is on which icon requires secure/
-  protected changes that can't happen mid-combat, so rather than patch
-  numbers in place, the grid just shows whatever it showed right before
-  combat started and catches up the instant combat ends.
+- Durability numbers keep updating live in combat. Which shield is on
+  which icon freezes during combat, though, and only catches up once
+  combat ends - reassigning icons requires secure/protected changes that
+  can't happen mid-fight. If you equip a shield mid-combat, the icons
+  whose bag slots shuffle as a result may briefly show a different
+  shield's numbers than expected on that icon, until combat ends and
+  everything re-syncs.
 - `/shs` opens options. `/shs lock`, `/shs unlock`, `/shs reset` also
   work. `/shs dump` opens a copyable text dump of everything read off
   each shield (itemID, link, durability, etc.) - a diagnostic tool, not a
