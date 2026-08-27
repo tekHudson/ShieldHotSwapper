@@ -141,8 +141,8 @@ function SW:PLAYER_REGEN_ENABLED()
 end
 
 ----------------------------------------------------------------------
--- Layout: equipped icon (fixed first, if any) + gap + bag grid (most-
--- damaged first).
+-- Layout: equipped icon (fixed first, if any) + gap + bag grid
+-- (alphabetical by name).
 ----------------------------------------------------------------------
 
 -- Deliberately type="macro" + "/use bag slot", NOT type="item" + a link.
@@ -250,20 +250,15 @@ function SW:RefreshLayout()
 		end
 	end
 
-	-- table.sort isn't stable: when two shields tie on durability (the
-	-- common case - bag items don't take damage sitting there, only
-	-- equipped gear does), Lua is free to order them differently between
-	-- calls even though nothing changed. Tiebreak by name first - readable
-	-- and predictable (same-named shields cluster together, different
-	-- types sort A-Z) - then guid, which only matters for two genuinely
-	-- identical shields (same name/itemID): it's a per-physical-item
-	-- identity, so it keeps THAT pair from flip-flopping between refreshes
+	-- Sorted by name (alphabetical, readable, predictable - same-named
+	-- shields cluster together, different types sort A-Z), not durability -
+	-- durability still shows on each icon, it just doesn't drive order.
+	-- guid tiebreaks two genuinely identical shields (same name/itemID):
+	-- it's a per-physical-item identity, so it keeps that specific pair
+	-- from flip-flopping between refreshes (table.sort isn't stable)
 	-- without affecting how anything else is ordered. itemID is the last
 	-- resort for the rare case guid comes back nil (API unavailable).
 	table.sort(bagShields, function(a, b)
-		local pa = a.maxDurability > 0 and a.durability / a.maxDurability or 1
-		local pb = b.maxDurability > 0 and b.durability / b.maxDurability or 1
-		if pa ~= pb then return pa < pb end
 		if a.name and b.name and a.name ~= b.name then return a.name < b.name end
 		if a.guid and b.guid and a.guid ~= b.guid then return a.guid < b.guid end
 		return a.itemID < b.itemID

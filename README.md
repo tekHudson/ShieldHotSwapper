@@ -12,10 +12,8 @@ one you're actually wearing) don't quietly go unrepaired.
   answer yet, so there's nothing worth displaying.
 - Layout is `<equipped> gap <bag shields...>`: the shield you're wearing
   is always the first icon, with a visual gap before the grid of spares
-  from your bags. Position alone tells you which one is equipped - no
-  highlight to track. Bag shields sort most-damaged first, then
-  alphabetically by name for ties (the common case - shields don't take
-  damage sitting in a bag).
+  from your bags, sorted alphabetically by name. Position alone tells you
+  which one is equipped - no highlight to track.
 - Right-click a bag icon to equip that shield (swaps whatever's currently
   worn back into the bag), same as double-clicking it in your bags.
   Right-clicking the worn shield's own icon does nothing - there's nothing

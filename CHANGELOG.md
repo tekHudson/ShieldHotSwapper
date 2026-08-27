@@ -2,13 +2,16 @@
 
 ## Unreleased
 
-- Fixed: bag shields tied on durability (the common case - only equipped
-  gear takes damage) sorted by raw item GUID, an essentially random-
-  looking internal ID with no relationship to name, type, or anything
-  readable. Tiebreak is now name (alphabetical, predictable, groups
-  same-named shields together), falling back to guid only between two
-  genuinely identical shields (to keep that specific pair from
-  flip-flopping), then itemID as a last resort.
+## 0.1.4 - 2026-08-27
+
+- Changed: bag shields sort alphabetically by name now, not by durability.
+  (First pass just fixed the tiebreak - durability primary, name for ties -
+  but ties were the common case anyway since bag items don't take damage,
+  so per feedback the whole ordering is simpler as name-first.) Durability
+  still shows on each icon, it just doesn't drive order anymore. guid still
+  tiebreaks two genuinely identical shields (same name) so that pair
+  doesn't flip-flop between refreshes; itemID is the last-resort fallback
+  if guid is unavailable.
 
 ## 0.1.3 - 2026-08-27
 
