@@ -8,13 +8,16 @@ the one you're actually wearing) don't quietly go unrepaired.
   bag, sorted most-damaged first. Equipping a shield doesn't reshuffle the
   icons - the gold outline box just moves to whichever icon is now worn.
   The worn shield is never crowded out by bag shields filling the grid.
-- Click a bag icon to equip that shield (swaps whatever's currently worn
-  back into the bag), same as double-clicking it in your bags. Clicking the
-  worn shield's own icon does nothing - there's nothing to swap it with.
-  Works in combat too - the icons are secure action buttons, so equipping
-  survives combat lockdown the same way action bars do.
-- Hold-click anywhere on the group (an icon or the background gap) to drag
-  the whole thing. Lock the frame in options to stop accidental drags.
+- Right-click a bag icon to equip that shield (swaps whatever's currently
+  worn back into the bag), same as double-clicking it in your bags.
+  Right-clicking the worn shield's own icon does nothing - there's nothing
+  to swap it with. Works in combat too - the icons are secure action
+  buttons, so equipping survives combat lockdown the same way action bars
+  do. It's right-click and not left specifically so it doesn't conflict
+  with left-click-and-hold, which drags the group.
+- Hold-click (left) anywhere on the group (an icon or the background gap)
+  to drag the whole thing. Lock the frame in options to stop accidental
+  drags.
 - Two sliders under Display set the grid size: rows (1-6), columns (1-10).
 - The grid freezes (which shield is on which icon) while you're in combat -
   durability numbers still update live, but reassigning icons has to wait

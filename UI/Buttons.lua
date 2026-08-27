@@ -1,8 +1,8 @@
 --[[ ShieldHotSwapper — icon grid: pool of secure buttons, one per
 displayed shield, laid out into the rows x columns grid from options.
 
-Buttons use SecureActionButtonTemplate (type="item") so click-to-equip
-survives combat lockdown - a plain insecure button calling
+Buttons use SecureActionButtonTemplate (type2="item", right-click) so
+click-to-equip survives combat lockdown - a plain insecure button calling
 UseContainerItem() during combat gets its equip silently downgraded to
 just picking the item up onto the cursor, which is exactly the bug this
 fixes. The tradeoff: secure attributes and structural changes (position,
@@ -13,11 +13,16 @@ button) during combat and only re-lays-out once combat ends
 combat via updateCosmeticsOnly() - those are plain child-texture/
 fontstring changes, not attribute or structural changes, so they're safe.
 
-Each button also registers its own drag and forwards Start/StopMoving to
-the shared container frame (dragging a window via StartMoving isn't a
-protected action, so this remains unaffected by any of the above), so
-holding down on an icon moves the whole group exactly like holding down
-on the background gap does.
+Equip is bound to RIGHT-click specifically (not left) so it can use
+AnyDown + useOnKeyDown=true (required - see the long comment in
+createButton for why a plain LeftButtonUp registration silently drops
+the click depending on the player's Action Bar CVar settings) without
+racing the left-click drag-to-move gesture below. Each button also
+registers its own drag and forwards Start/StopMoving to the shared
+container frame (dragging a window via StartMoving isn't a protected
+action, so this remains unaffected by any of the above), so holding down
+on an icon moves the whole group exactly like holding down on the
+background gap does.
 ]]
 
 local ADDON, ns = ...
@@ -52,17 +57,26 @@ local function createButton(i)
 	btn:RegisterForDrag("LeftButton")
 	btn:SetScript("OnDragStart", onDragStart)
 	btn:SetScript("OnDragStop", onDragStop)
-	-- Numbered type1/item1 (left click) instead of unnumbered type/item -
-	-- PallySquire's secure buttons (proven working in combat) use numbered
-	-- attributes for exactly this reason. Deliberately NOT using
-	-- useOnKeyDown/AnyDown like PallySquire's do: that fires the secure
-	-- action immediately on mouse-DOWN, which would race the drag-to-move
-	-- gesture (grabbing an icon to drag the group would also fire an
-	-- accidental equip on the initial press) - PallySquire's buttons don't
-	-- have that conflict since they don't support dragging. LeftButtonUp
-	-- already correctly distinguishes a real click from a click-that-
-	-- became-a-drag (OnClick doesn't fire if OnDragStart already did).
-	btn:RegisterForClicks("LeftButtonUp")
+	-- Traced the actual dispatch chain in
+	-- ~/ws/wow-ui-source/.../Blizzard_FrameXML/SecureTemplates.lua
+	-- (OnActionButtonClick -> GetConvertedButtonUnitAndActionType ->
+	-- SecureButton_GetModifiedAttribute) rather than guess further after
+	-- two failed attempts. Confirmed: the attribute actually looked up is
+	-- "type"..SecureButton_GetButtonSuffix(button), where RightButton maps
+	-- to suffix "2" - so a right-click reads exactly type2/item2 (set in
+	-- setItemAttr below). SecureActionButton_OnClick also only fires the
+	-- action when the click's down/up state matches useOnKeyDown
+	-- (SecureActionButton_ShouldUseOnKeyDown falls back to the player's
+	-- "ActionButtonUseKeyDown" CVar - invisible to the addon - if it isn't
+	-- set explicitly), so it's set here rather than left implicit.
+	--
+	-- Equip is bound to RIGHT-click specifically so useOnKeyDown (fires
+	-- immediately on mouse-down) can't race the left-click drag-to-move
+	-- gesture below: left click never gets a type1/item1 attribute, so its
+	-- mouse-down does nothing, while RegisterForDrag("LeftButton") still
+	-- drives the drag independently.
+	btn:RegisterForClicks("AnyDown")
+	btn:SetAttribute("useOnKeyDown", true)
 
 	local ring = btn:CreateTexture(nil, "BACKGROUND")
 	ring:SetPoint("TOPLEFT", -1, 1)
@@ -118,16 +132,17 @@ local function createButton(i)
 		else
 			GameTooltip:SetBagItem(self.bag, self.slot)
 			GameTooltip:AddLine(" ")
-			GameTooltip:AddLine("Click to equip", 0.6, 1, 0.6)
+			GameTooltip:AddLine("Right-click to equip", 0.6, 1, 0.6)
 		end
 		GameTooltip:Show()
 	end)
 	btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	-- No OnClick script: click-to-equip is handled entirely by the secure
-	-- type="item" attribute set in setItemAttr below. Setting a raw OnClick
-	-- on a SecureActionButtonTemplate button would replace its protected
-	-- click dispatch with insecure Lua - exactly the bug being fixed here.
+	-- No OnClick script: right-click-to-equip is handled entirely by the
+	-- secure type2="item" attribute set in setItemAttr below. Setting a raw
+	-- OnClick on a SecureActionButtonTemplate button would replace its
+	-- protected click dispatch with insecure Lua - exactly the bug being
+	-- fixed here.
 
 	btn:Hide()
 	return btn
@@ -158,16 +173,17 @@ end
 
 -- Secure attribute changes are combat-locked just like structural changes
 -- (position/size) - only ever called from the non-combat path below.
--- Numbered (type1/item1 = left click) rather than the unnumbered type/item
--- - see the RegisterForClicks comment in createButton for why.
+-- type2/item2 = right click (RightButton -> suffix "2", see the
+-- RegisterForClicks comment in createButton for why right-click and not
+-- left).
 local function setItemAttr(btn, entry)
 	if InCombatLockdown() then return end
 	if entry.kind == "bag" then
-		btn:SetAttribute("type1", "item")
-		btn:SetAttribute("item1", entry.link)
+		btn:SetAttribute("type2", "item")
+		btn:SetAttribute("item2", entry.link)
 	else
-		btn:SetAttribute("type1", nil)
-		btn:SetAttribute("item1", nil)
+		btn:SetAttribute("type2", nil)
+		btn:SetAttribute("item2", nil)
 	end
 end
 
