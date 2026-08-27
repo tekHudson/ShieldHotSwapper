@@ -52,6 +52,16 @@ local function createButton(i)
 	btn:RegisterForDrag("LeftButton")
 	btn:SetScript("OnDragStart", onDragStart)
 	btn:SetScript("OnDragStop", onDragStop)
+	-- Numbered type1/item1 (left click) instead of unnumbered type/item -
+	-- PallySquire's secure buttons (proven working in combat) use numbered
+	-- attributes for exactly this reason. Deliberately NOT using
+	-- useOnKeyDown/AnyDown like PallySquire's do: that fires the secure
+	-- action immediately on mouse-DOWN, which would race the drag-to-move
+	-- gesture (grabbing an icon to drag the group would also fire an
+	-- accidental equip on the initial press) - PallySquire's buttons don't
+	-- have that conflict since they don't support dragging. LeftButtonUp
+	-- already correctly distinguishes a real click from a click-that-
+	-- became-a-drag (OnClick doesn't fire if OnDragStart already did).
 	btn:RegisterForClicks("LeftButtonUp")
 
 	local ring = btn:CreateTexture(nil, "BACKGROUND")
@@ -148,14 +158,16 @@ end
 
 -- Secure attribute changes are combat-locked just like structural changes
 -- (position/size) - only ever called from the non-combat path below.
+-- Numbered (type1/item1 = left click) rather than the unnumbered type/item
+-- - see the RegisterForClicks comment in createButton for why.
 local function setItemAttr(btn, entry)
 	if InCombatLockdown() then return end
 	if entry.kind == "bag" then
-		btn:SetAttribute("type", "item")
-		btn:SetAttribute("item", entry.link)
+		btn:SetAttribute("type1", "item")
+		btn:SetAttribute("item1", entry.link)
 	else
-		btn:SetAttribute("type", nil)
-		btn:SetAttribute("item", nil)
+		btn:SetAttribute("type1", nil)
+		btn:SetAttribute("item1", nil)
 	end
 end
 
