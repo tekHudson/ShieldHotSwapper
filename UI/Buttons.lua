@@ -1,11 +1,23 @@
---[[ ShieldHotSwapper — icon grid: pool of plain (non-secure) buttons, one per
+--[[ ShieldHotSwapper — icon grid: pool of secure buttons, one per
 displayed shield, laid out into the rows x columns grid from options.
 
-No casting happens here, so these are ordinary Buttons, not
-SecureActionButtonTemplate - no combat-lockdown handling needed. Each button
-also registers its own drag and forwards Start/StopMoving to the shared
-container frame, so holding down on an icon moves the whole group exactly
-like holding down on the background gap does.
+Buttons use SecureActionButtonTemplate (type="item") so click-to-equip
+survives combat lockdown - a plain insecure button calling
+UseContainerItem() during combat gets its equip silently downgraded to
+just picking the item up onto the cursor, which is exactly the bug this
+fixes. The tradeoff: secure attributes and structural changes (position,
+size) can't be touched by insecure code while InCombatLockdown() is true,
+so RefreshLayout freezes the whole grid (which shield maps to which
+button) during combat and only re-lays-out once combat ends
+(PLAYER_REGEN_ENABLED). Durability numbers/colors still update live in
+combat via updateCosmeticsOnly() - those are plain child-texture/
+fontstring changes, not attribute or structural changes, so they're safe.
+
+Each button also registers its own drag and forwards Start/StopMoving to
+the shared container frame (dragging a window via StartMoving isn't a
+protected action, so this remains unaffected by any of the above), so
+holding down on an icon moves the whole group exactly like holding down
+on the background gap does.
 ]]
 
 local ADDON, ns = ...
@@ -34,12 +46,13 @@ local function onDragStop()
 end
 
 local function createButton(i)
-	local btn = CreateFrame("Button", "ShieldHotSwapperIcon" .. i, SW.frame)
+	local btn = CreateFrame("Button", "ShieldHotSwapperIcon" .. i, SW.frame, "SecureActionButtonTemplate")
 	btn:SetSize(ICON, ICON)
 	btn:EnableMouse(true)
 	btn:RegisterForDrag("LeftButton")
 	btn:SetScript("OnDragStart", onDragStart)
 	btn:SetScript("OnDragStop", onDragStop)
+	btn:RegisterForClicks("LeftButtonUp")
 
 	local ring = btn:CreateTexture(nil, "BACKGROUND")
 	ring:SetPoint("TOPLEFT", -1, 1)
@@ -101,15 +114,10 @@ local function createButton(i)
 	end)
 	btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	-- Click to equip: same as double-clicking the item in your bags (swaps
-	-- whatever's currently worn back into the bag slot this came from). The
-	-- already-worn shield's icon is a no-op here - nothing to swap it with.
-	btn:RegisterForClicks("LeftButtonUp")
-	btn:SetScript("OnClick", function(self)
-		if self.kind ~= "bag" then return end
-		local UseItem = C_Container and C_Container.UseContainerItem or _G.UseContainerItem
-		UseItem(self.bag, self.slot)
-	end)
+	-- No OnClick script: click-to-equip is handled entirely by the secure
+	-- type="item" attribute set in setItemAttr below. Setting a raw OnClick
+	-- on a SecureActionButtonTemplate button would replace its protected
+	-- click dispatch with insecure Lua - exactly the bug being fixed here.
 
 	btn:Hide()
 	return btn
@@ -120,6 +128,14 @@ function SW:CreateButtons()
 	for i = 1, MAX_ROWS * MAX_COLUMNS do
 		SW.buttons[i] = createButton(i)
 	end
+	SW:RegisterEvent("PLAYER_REGEN_ENABLED")
+end
+
+-- Combat ended: apply whatever layout would have happened while frozen.
+function SW:PLAYER_REGEN_ENABLED()
+	if SW.layoutPending then
+		SW:RefreshLayout()
+	end
 end
 
 ----------------------------------------------------------------------
@@ -129,6 +145,20 @@ end
 -- so an item's sort position doesn't move either. Only the gold outline
 -- box (see fillButton) jumps to mark whichever icon is now worn.
 ----------------------------------------------------------------------
+
+-- Secure attribute changes are combat-locked just like structural changes
+-- (position/size) - only ever called from the non-combat path below.
+local function setItemAttr(btn, entry)
+	if InCombatLockdown() then return end
+	if entry.kind == "bag" then
+		btn:SetAttribute("type", "item")
+		btn:SetAttribute("item", entry.link)
+	else
+		btn:SetAttribute("type", nil)
+		btn:SetAttribute("item", nil)
+	end
+end
+
 local function fillButton(btn, entry)
 	btn.kind = entry.kind
 	btn.bag, btn.slot = entry.bag, entry.slot
@@ -142,6 +172,8 @@ local function fillButton(btn, entry)
 	local r, g, b = durabilityColor(pct)
 	btn.durText:SetTextColor(r, g, b)
 	btn.ring:SetColorTexture(r, g, b, 1)
+
+	setItemAttr(btn, entry)
 end
 
 local function placeButton(btn, index, cols)
@@ -152,8 +184,54 @@ local function placeButton(btn, index, cols)
 		MARGIN + col * (ICON + PAD), -MARGIN - row * (ICON + PAD))
 end
 
+-- Match each already-placed button back to its current entry in a fresh
+-- scan, by the identity that doesn't change between scans (kind + where it
+-- is). Used to refresh durability/coloring in combat without touching
+-- position, size, or secure attributes on any button.
+local function findMatchingEntry(shields, btn)
+	for _, entry in ipairs(shields) do
+		if entry.kind == btn.kind then
+			if entry.kind == "equipped" then
+				if entry.invSlot == btn.invSlot then return entry end
+			elseif entry.bag == btn.bag and entry.slot == btn.slot then
+				return entry
+			end
+		end
+	end
+	return nil
+end
+
+local function updateCosmeticsOnly()
+	local shields = SW.shields or {}
+	for _, btn in ipairs(SW.buttons) do
+		if btn.kind then
+			local entry = findMatchingEntry(shields, btn)
+			if entry then
+				btn.icon:SetTexture(entry.icon)
+				local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1
+				btn.durText:SetText(math.floor(pct * 100 + 0.5) .. "%")
+				local r, g, b = durabilityColor(pct)
+				btn.durText:SetTextColor(r, g, b)
+				btn.ring:SetColorTexture(r, g, b, 1)
+			end
+		end
+	end
+end
+
 function SW:RefreshLayout()
 	if not SW.buttons then return end
+
+	-- Combat lockdown: can't reassign/reposition/resize secure buttons, so
+	-- freeze the grid as-is and just refresh numbers on whatever's already
+	-- placed. Full layout (including any new/removed shields) applies the
+	-- moment combat ends, via PLAYER_REGEN_ENABLED above.
+	if InCombatLockdown() then
+		SW.layoutPending = true
+		updateCosmeticsOnly()
+		return
+	end
+	SW.layoutPending = false
+
 	local shields = SW.shields or {}
 
 	-- table.sort isn't stable: when two shields tie on durability (the

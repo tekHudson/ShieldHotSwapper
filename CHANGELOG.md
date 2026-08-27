@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 0.1.2 - 2026-08-27
+
+- Fixed: clicking an icon to equip it while in combat picked the item up
+  onto the cursor instead of equipping it. A plain (insecure) button
+  calling `UseContainerItem()` can't complete a protected equip action
+  during combat lockdown, so the game silently falls back to a pickup -
+  the same reason action bars use secure buttons. Icons are now real
+  secure action buttons (`type="item"`), same mechanism action bars use,
+  so the click itself is protected and survives combat.
+
+  Tradeoff: secure attributes and repositioning can't be changed by
+  insecure code while in combat, so the grid now freezes (which shield is
+  on which icon) for the duration of combat and only reassigns once combat
+  ends (`PLAYER_REGEN_ENABLED`). Durability numbers/colors still update
+  live in combat - those are plain cosmetic changes, not attribute or
+  structural ones, so they're unaffected.
+
 ## 0.1.1 - 2026-08-26
 
 - Renamed the addon from ShieldWatch to ShieldHotSwapper (CurseForge
