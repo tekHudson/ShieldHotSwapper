@@ -102,6 +102,22 @@ local function createButton(i)
 	durText:SetShadowColor(0, 0, 0, 1)
 	btn.durText = durText
 
+	-- Low-durability warning glow on the equipped icon, reusing Blizzard's
+	-- own action-bar "spell activation alert" glow (the gold pulsing/ants
+	-- effect used for proc alerts) rather than building one from scratch.
+	-- One override needed: the template's animOut hardwires OnFinished (see
+	-- ActionBarFrame.xml) to return the frame to Blizzard's SHARED action-
+	-- bar overlay pool via ActionButton_OverlayGlowAnimOutFinished - fine
+	-- for a real action button, but our frame isn't from that pool, so
+	-- letting that run would hand our overlay off to some unrelated action
+	-- button later. Replaced with a plain, local-only hide.
+	local glow = CreateFrame("Frame", nil, btn, "ActionBarButtonSpellActivationAlert")
+	glow:SetSize(ICON * 1.4, ICON * 1.4)
+	glow:SetPoint("CENTER", btn, "CENTER")
+	glow.animOut:SetScript("OnFinished", function() glow:Hide() end)
+	glow:Hide()
+	btn.glow = glow
+
 	btn:SetScript("OnEnter", function(self)
 		if not self.kind then return end
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -167,6 +183,28 @@ local function setItemAttr(btn, entry)
 	end
 end
 
+-- Shows/hides a button's low-durability glow (see createButton), no-op if
+-- already in the requested state. Only ever called for the equipped icon -
+-- bag spares don't warrant the warning, only the shield actually taking
+-- damage does.
+local function setLowDurabilityGlow(btn, show)
+	if show == btn.glowShown then return end
+	btn.glowShown = show
+	local glow = btn.glow
+	if show then
+		if glow.animOut:IsPlaying() then glow.animOut:Stop() end
+		glow:Show()
+		glow.animIn:Play()
+	else
+		if glow.animIn:IsPlaying() then glow.animIn:Stop() end
+		if glow:IsVisible() then
+			glow.animOut:Play()
+		else
+			glow:Hide()
+		end
+	end
+end
+
 local function fillButton(btn, entry)
 	btn.kind = entry.kind
 	btn.bag, btn.slot = entry.bag, entry.slot
@@ -178,6 +216,9 @@ local function fillButton(btn, entry)
 	local r, g, b = durabilityColor(pct)
 	btn.durText:SetTextColor(r, g, b)
 	btn.ring:SetColorTexture(r, g, b, 1)
+
+	local threshold = (SW.opt.lowDurabilityPct or 5) / 100
+	setLowDurabilityGlow(btn, entry.kind == "equipped" and pct <= threshold)
 
 	setItemAttr(btn, entry)
 end
@@ -209,6 +250,8 @@ local function updateDurabilityOnly()
 					local r, g, b = durabilityColor(pct)
 					btn.durText:SetTextColor(r, g, b)
 					btn.ring:SetColorTexture(r, g, b, 1)
+					local threshold = (SW.opt.lowDurabilityPct or 5) / 100
+					setLowDurabilityGlow(btn, entry.kind == "equipped" and pct <= threshold)
 					break
 				end
 			end

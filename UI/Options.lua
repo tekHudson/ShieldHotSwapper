@@ -80,6 +80,13 @@ function SW:CreateOptions()
 		function(v) SW.opt.display.columns = v end, y)
 	y = y - 48
 
+	------------------------------------------------------------------
+	header("Warnings")
+	makeSlider(panel, "LowDurability", "Low durability glow threshold (%)", 0, 10,
+		function() return SW.opt.lowDurabilityPct end,
+		function(v) SW.opt.lowDurabilityPct = v end, y)
+	y = y - 48
+
 	if Settings and Settings.RegisterCanvasLayoutCategory then
 		local category = Settings.RegisterCanvasLayoutCategory(panel, "ShieldHotSwapper")
 		Settings.RegisterAddOnCategory(category)

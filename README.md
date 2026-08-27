@@ -26,6 +26,10 @@ one you're actually wearing) don't quietly go unrepaired.
   drags.
 - Two sliders under Display set the bag grid's size: rows (1-6), columns
   (1-10). The equipped icon is separate and doesn't count against this.
+- The equipped icon glows (Blizzard's own proc-alert effect) when its
+  durability drops at or below a threshold you set under
+  Warnings (0-10%, default 5%). Bag spares never glow, only the shield
+  actually taking damage.
 - Durability numbers keep updating live in combat. Which shield is on
   which icon freezes during combat, though, and only catches up once
   combat ends - reassigning icons requires secure/protected changes that

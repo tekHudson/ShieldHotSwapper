@@ -36,6 +36,7 @@ local DEFAULTS = {
 	locked = false,
 	pos = nil,
 	display = { rows = 1, columns = 6 },
+	lowDurabilityPct = 5, -- equipped-shield glow threshold (0-10%), see UI/Buttons.lua
 }
 
 local function mergeDefaults(db, defaults)

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added a low-durability warning glow on the equipped shield icon, reusing
+  Blizzard's own action-bar "spell activation alert" effect (the gold
+  pulsing/ants glow used for proc alerts) rather than building one from
+  scratch - traced its XML in `~/ws/wow-ui-source` first, and overrode one
+  handler (the fade-out animation's `OnFinished`) since it's hardwired to
+  return the frame to Blizzard's shared action-bar overlay pool, which
+  would risk a real action button stealing our custom overlay later.
+  Threshold is a new 0-10% slider under a "Warnings" section in options
+  (default 5%). Bag spares never glow, only the equipped shield.
+
 ## 0.1.4 - 2026-08-27
 
 - Changed: bag shields sort alphabetically by name now, not by durability.
