@@ -37,6 +37,7 @@ local DEFAULTS = {
 	pos = nil,
 	display = { rows = 1, columns = 6 },
 	lowDurabilityPct = 5, -- equipped-shield glow threshold (0-10%), see UI/Buttons.lua
+	demoMode = false, -- preview 4 synthetic shields, see Core/Scan.lua:demoShields()
 }
 
 local function mergeDefaults(db, defaults)

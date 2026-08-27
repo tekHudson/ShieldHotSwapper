@@ -30,6 +30,11 @@ one you're actually wearing) don't quietly go unrepaired.
   durability drops at or below a threshold you set under
   Warnings (0-10%, default 5%). Bag spares never glow, only the shield
   actually taking damage.
+- "Demo mode" under Settings swaps the grid to 4 synthetic shields (one
+  equipped at 5% with the glow on, three bagged at 0/50/100%) so you can
+  preview the layout/warning without needing real shields in that state.
+  They're not real items - right-clicking one does nothing, and their
+  tooltips say so.
 - Durability numbers keep updating live in combat. Which shield is on
   which icon freezes during combat, though, and only catches up once
   combat ends - reassigning icons requires secure/protected changes that

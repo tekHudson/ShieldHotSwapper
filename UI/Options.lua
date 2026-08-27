@@ -67,6 +67,12 @@ function SW:CreateOptions()
 	header("Settings")
 	makeCheck(panel, "Lock frame position", function() return SW.opt.locked end,
 		function(v) SW.opt.locked = v end, y)
+	y = y - 26
+	makeCheck(panel, "Demo mode (preview 4 sample shields)", function() return SW.opt.demoMode end,
+		function(v)
+			SW.opt.demoMode = v
+			SW:ScanShields() -- demoMode gates which data ScanShields produces; re-run it to switch immediately
+		end, y)
 	y = y - 34
 
 	------------------------------------------------------------------

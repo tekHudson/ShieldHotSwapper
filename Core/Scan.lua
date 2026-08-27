@@ -52,6 +52,43 @@ local function itemGUID(bag, slot, invSlot)
 end
 
 ------------------------------------------------------------------------
+-- Demo mode: synthetic data for previewing the grid/glow without needing
+-- real shields in a specific state. Real icon textures (generic Blizzard
+-- shield art already shipped with the client, not this addon's own icon -
+-- fine here since these ARE meant to look like in-game shields, unlike
+-- the addon's own branding icon) but negative/fake bag+slot and itemID so
+-- nothing here is ever mistaken for or interacts with a real item.
+------------------------------------------------------------------------
+local function demoShields()
+	return {
+		{
+			kind = "equipped", invSlot = INVSLOT_OFFHAND, itemID = -1, link = nil,
+			name = "Demo Shield (equipped, critical)",
+			icon = "Interface\\Icons\\INV_Shield_06",
+			durability = 5, maxDurability = 100, guid = "demo-1", demo = true,
+		},
+		{
+			kind = "bag", bag = -1, slot = 1, itemID = -2, link = nil,
+			name = "Demo Shield (broken)",
+			icon = "Interface\\Icons\\INV_Shield_04",
+			durability = 0, maxDurability = 100, guid = "demo-2", demo = true,
+		},
+		{
+			kind = "bag", bag = -1, slot = 2, itemID = -3, link = nil,
+			name = "Demo Shield (worn)",
+			icon = "Interface\\Icons\\INV_Shield_05",
+			durability = 50, maxDurability = 100, guid = "demo-3", demo = true,
+		},
+		{
+			kind = "bag", bag = -1, slot = 3, itemID = -4, link = nil,
+			name = "Demo Shield (pristine)",
+			icon = "Interface\\Icons\\INV_Shield_07",
+			durability = 100, maxDurability = 100, guid = "demo-4", demo = true,
+		},
+	}
+end
+
+------------------------------------------------------------------------
 -- Scan
 ------------------------------------------------------------------------
 
@@ -82,6 +119,12 @@ end
 -- when that happens we register GET_ITEM_INFO_RECEIVED once and rescan
 -- when it fires.
 function SW:ScanShields()
+	if SW.opt.demoMode then
+		SW.shields = demoShields()
+		if SW.RefreshLayout then SW:RefreshLayout() end
+		return SW.shields
+	end
+
 	local found = {}
 	local pending = false
 

@@ -121,7 +121,12 @@ local function createButton(i)
 	btn:SetScript("OnEnter", function(self)
 		if not self.kind then return end
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		if self.kind == "equipped" then
+		if self.demo then
+			-- Not a real item - SetBagItem/SetInventoryItem would show
+			-- nothing (or the wrong thing) for the fake bag/slot values.
+			GameTooltip:SetText(self.demoName or "Demo shield", 1, 1, 1)
+			GameTooltip:AddLine("Demo mode preview - not a real item", 0.6, 0.6, 0.6)
+		elseif self.kind == "equipped" then
 			GameTooltip:SetInventoryItem("player", self.invSlot) -- native tooltip already shows durability
 		else
 			GameTooltip:SetBagItem(self.bag, self.slot)
@@ -174,7 +179,7 @@ end
 -- name/link resolution at all - unambiguous even for exact duplicates.
 -- Only ever called out of combat (see RefreshLayout).
 local function setItemAttr(btn, entry)
-	if entry.kind == "bag" then
+	if entry.kind == "bag" and not entry.demo then
 		btn:SetAttribute("type2", "macro")
 		btn:SetAttribute("macrotext2", "/use " .. entry.bag .. " " .. entry.slot)
 	else
@@ -209,6 +214,8 @@ local function fillButton(btn, entry)
 	btn.kind = entry.kind
 	btn.bag, btn.slot = entry.bag, entry.slot
 	btn.invSlot = entry.invSlot
+	btn.demo = entry.demo
+	btn.demoName = entry.name
 	btn.icon:SetTexture(entry.icon)
 
 	local pct = entry.maxDurability > 0 and (entry.durability / entry.maxDurability) or 1

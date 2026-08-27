@@ -11,6 +11,14 @@
   would risk a real action button stealing our custom overlay later.
   Threshold is a new 0-10% slider under a "Warnings" section in options
   (default 5%). Bag spares never glow, only the equipped shield.
+- Added "Demo mode" (checkbox in Settings): swaps the grid to 4 synthetic
+  shields (equipped at 5% with the low-durability glow on, three bagged at
+  0/50/100%) to preview layout/warnings without needing real shields in
+  that state. `Core/Scan.lua:ScanShields()` substitutes this data
+  entirely when `SW.opt.demoMode` is set, so every downstream consumer
+  (sort, layout, glow, `/shs dump`) works unchanged - the demo entries
+  just carry a `demo = true` flag that suppresses the real-item-only
+  parts (equip attribute, `SetBagItem`/`SetInventoryItem` tooltip).
 
 ## 0.1.4 - 2026-08-27
 
