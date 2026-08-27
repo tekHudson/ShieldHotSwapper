@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Fixed: bag shields tied on durability (the common case - only equipped
+  gear takes damage) sorted by raw item GUID, an essentially random-
+  looking internal ID with no relationship to name, type, or anything
+  readable. Tiebreak is now name (alphabetical, predictable, groups
+  same-named shields together), falling back to guid only between two
+  genuinely identical shields (to keep that specific pair from
+  flip-flopping), then itemID as a last resort.
+
 ## 0.1.3 - 2026-08-27
 
 - Reworked combat handling and the whole equipped-shield display after the

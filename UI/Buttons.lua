@@ -251,14 +251,20 @@ function SW:RefreshLayout()
 	end
 
 	-- table.sort isn't stable: when two shields tie on durability (the
-	-- common case - most are undamaged), Lua is free to order them
-	-- differently between calls even though neither value changed. guid
-	-- (Core/Scan.lua: a per-physical-item identity) fixes this - itemID is
-	-- the fallback for the rare case guid comes back nil (API unavailable).
+	-- common case - bag items don't take damage sitting there, only
+	-- equipped gear does), Lua is free to order them differently between
+	-- calls even though nothing changed. Tiebreak by name first - readable
+	-- and predictable (same-named shields cluster together, different
+	-- types sort A-Z) - then guid, which only matters for two genuinely
+	-- identical shields (same name/itemID): it's a per-physical-item
+	-- identity, so it keeps THAT pair from flip-flopping between refreshes
+	-- without affecting how anything else is ordered. itemID is the last
+	-- resort for the rare case guid comes back nil (API unavailable).
 	table.sort(bagShields, function(a, b)
 		local pa = a.maxDurability > 0 and a.durability / a.maxDurability or 1
 		local pb = b.maxDurability > 0 and b.durability / b.maxDurability or 1
 		if pa ~= pb then return pa < pb end
+		if a.name and b.name and a.name ~= b.name then return a.name < b.name end
 		if a.guid and b.guid and a.guid ~= b.guid then return a.guid < b.guid end
 		return a.itemID < b.itemID
 	end)

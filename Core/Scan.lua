@@ -68,6 +68,7 @@ local function scanEquipped()
 	local durability, maxDurability = GetInventoryItemDurability(INVSLOT_OFFHAND)
 	return {
 		kind = "equipped", invSlot = INVSLOT_OFFHAND, itemID = itemID, link = link,
+		name = name,
 		icon = texture,
 		durability = durability or 1,
 		maxDurability = maxDurability or 1,
@@ -100,6 +101,7 @@ function SW:ScanShields()
 					local durability, maxDurability = GetSlotDurability(bag, slot)
 					found[#found + 1] = {
 						kind = "bag", bag = bag, slot = slot, itemID = itemID, link = link,
+						name = name,
 						icon = texture,
 						durability = durability or 1,
 						maxDurability = maxDurability or 1,
