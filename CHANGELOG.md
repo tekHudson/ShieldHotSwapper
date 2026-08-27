@@ -2,13 +2,15 @@
 
 ## Unreleased
 
-- Added a low-durability warning glow on the equipped shield icon, reusing
-  Blizzard's own action-bar "spell activation alert" effect (the gold
-  pulsing/ants glow used for proc alerts) rather than building one from
-  scratch - traced its XML in `~/ws/wow-ui-source` first, and overrode one
-  handler (the fade-out animation's `OnFinished`) since it's hardwired to
-  return the frame to Blizzard's shared action-bar overlay pool, which
-  would risk a real action button stealing our custom overlay later.
+- Added a low-durability warning glow on the equipped shield icon: a
+  pulsing colored border (plain `CreateTexture` + `OnUpdate`, same 4-edge
+  technique as an earlier highlight box in this project). First attempt
+  reused Blizzard's action-bar "spell activation alert" template (the gold
+  proc-alert glow) - present in the `~/ws/wow-ui-source` checkout, but
+  that tree apparently doesn't perfectly match what's actually loaded on
+  this client: `CreateFrame` errored `Couldn't find inherited node` in
+  practice, crashing addon load entirely. Rebuilt from only
+  `CreateTexture`/`OnUpdate`, APIs guaranteed present since vanilla.
   Threshold is a new 0-10% slider under a "Warnings" section in options
   (default 5%). Bag spares never glow, only the equipped shield.
 - Added "Demo mode" (checkbox in Settings): swaps the grid to 4 synthetic

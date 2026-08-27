@@ -102,20 +102,38 @@ local function createButton(i)
 	durText:SetShadowColor(0, 0, 0, 1)
 	btn.durText = durText
 
-	-- Low-durability warning glow on the equipped icon, reusing Blizzard's
-	-- own action-bar "spell activation alert" glow (the gold pulsing/ants
-	-- effect used for proc alerts) rather than building one from scratch.
-	-- One override needed: the template's animOut hardwires OnFinished (see
-	-- ActionBarFrame.xml) to return the frame to Blizzard's SHARED action-
-	-- bar overlay pool via ActionButton_OverlayGlowAnimOutFinished - fine
-	-- for a real action button, but our frame isn't from that pool, so
-	-- letting that run would hand our overlay off to some unrelated action
-	-- button later. Replaced with a plain, local-only hide.
-	local glow = CreateFrame("Frame", nil, btn, "ActionBarButtonSpellActivationAlert")
-	glow:SetSize(ICON * 1.4, ICON * 1.4)
-	glow:SetPoint("CENTER", btn, "CENTER")
-	glow.animOut:SetScript("OnFinished", function() glow:Hide() end)
-	glow:Hide()
+	-- Low-durability warning glow on the equipped icon: a pulsing colored
+	-- border, same 4-edge-texture technique as the equipped-shield
+	-- highlight box built earlier this project (since removed in favor of
+	-- fixed positioning, but the technique itself is sound and already
+	-- proven working in-game). First attempt here reused Blizzard's
+	-- "ActionBarButtonSpellActivationAlert" template (the gold proc-alert
+	-- glow) - it's present in the ~/ws/wow-ui-source checkout, but that
+	-- tree apparently doesn't perfectly match what's actually loaded on
+	-- this client: CreateFrame errored "Couldn't find inherited node"
+	-- in-game, crashing addon load entirely. Rebuilt from only
+	-- CreateTexture/OnUpdate - APIs guaranteed present since vanilla, no
+	-- template/utility-function dependency to be wrong about again. A
+	-- border (not a full overlay tint) also avoids covering the icon/
+	-- durability text while pulsing.
+	local GLOW_INSET, GLOW_THICK = 3, 3
+	local glow = {}
+	local function glowEdge(point1, point2)
+		local t = btn:CreateTexture(nil, "OVERLAY", nil, 2)
+		t:SetColorTexture(1, 0.15, 0.05)
+		t:SetPoint(unpack(point1))
+		t:SetPoint(unpack(point2))
+		return t
+	end
+	glow.top = glowEdge({ "TOPLEFT", -GLOW_INSET, GLOW_INSET }, { "TOPRIGHT", GLOW_INSET, GLOW_INSET })
+	glow.top:SetHeight(GLOW_THICK)
+	glow.bottom = glowEdge({ "BOTTOMLEFT", -GLOW_INSET, -GLOW_INSET }, { "BOTTOMRIGHT", GLOW_INSET, -GLOW_INSET })
+	glow.bottom:SetHeight(GLOW_THICK)
+	glow.left = glowEdge({ "TOPLEFT", -GLOW_INSET, GLOW_INSET }, { "BOTTOMLEFT", -GLOW_INSET, -GLOW_INSET })
+	glow.left:SetWidth(GLOW_THICK)
+	glow.right = glowEdge({ "TOPRIGHT", GLOW_INSET, GLOW_INSET }, { "BOTTOMRIGHT", GLOW_INSET, -GLOW_INSET })
+	glow.right:SetWidth(GLOW_THICK)
+	for _, t in pairs(glow) do t:Hide() end
 	btn.glow = glow
 
 	btn:SetScript("OnEnter", function(self)
@@ -188,6 +206,16 @@ local function setItemAttr(btn, entry)
 	end
 end
 
+-- Pulses the shown glow border's alpha via a plain sine wave - no
+-- animation-group/template machinery, just elapsed time. Driven off the
+-- button's own OnUpdate (not otherwise used) since the border is 4
+-- separate edge textures, not one object.
+local function glowPulse(btn, elapsed)
+	btn.glowT = (btn.glowT or 0) + elapsed
+	local alpha = 0.35 + 0.45 * (0.5 + 0.5 * math.sin(btn.glowT * 4))
+	for _, t in pairs(btn.glow) do t:SetAlpha(alpha) end
+end
+
 -- Shows/hides a button's low-durability glow (see createButton), no-op if
 -- already in the requested state. Only ever called for the equipped icon -
 -- bag spares don't warrant the warning, only the shield actually taking
@@ -195,18 +223,13 @@ end
 local function setLowDurabilityGlow(btn, show)
 	if show == btn.glowShown then return end
 	btn.glowShown = show
-	local glow = btn.glow
 	if show then
-		if glow.animOut:IsPlaying() then glow.animOut:Stop() end
-		glow:Show()
-		glow.animIn:Play()
+		btn.glowT = 0
+		for _, t in pairs(btn.glow) do t:Show() end
+		btn:SetScript("OnUpdate", glowPulse)
 	else
-		if glow.animIn:IsPlaying() then glow.animIn:Stop() end
-		if glow:IsVisible() then
-			glow.animOut:Play()
-		else
-			glow:Hide()
-		end
+		btn:SetScript("OnUpdate", nil)
+		for _, t in pairs(btn.glow) do t:Hide() end
 	end
 end
 
