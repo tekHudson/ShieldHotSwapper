@@ -1,8 +1,8 @@
 # ShieldHotSwapper
 
 Shows your currently-equipped shield plus every shield sitting in your bags
-as a small icon grid, with live durability, so spare/resistance shields (and
-the one you're actually wearing) don't quietly go unrepaired.
+as a small icon grid, with durability, so spare/resistance shields (and the
+one you're actually wearing) don't quietly go unrepaired.
 
 - Only loads for Warrior/Paladin/Shaman - the only classes that can equip a
   shield in Classic Era/SoD. Prints a one-line "disabled" message and does
@@ -10,10 +10,10 @@ the one you're actually wearing) don't quietly go unrepaired.
 - The grid itself only shows once you own 2+ shields total (worn + bagged
   combined) - with 0 or 1, there's no "which one is worn" question to
   answer yet, so there's nothing worth displaying.
-- All icons are always visible: one icon per shield you own, worn or in a
-  bag, sorted most-damaged first. Equipping a shield doesn't reshuffle the
-  icons - the gold outline box just moves to whichever icon is now worn.
-  The worn shield is never crowded out by bag shields filling the grid.
+- Layout is `<equipped> gap <bag shields...>`: the shield you're wearing
+  is always the first icon, with a visual gap before the grid of spares
+  from your bags (sorted most-damaged first). Position alone tells you
+  which one is equipped - no highlight to track.
 - Right-click a bag icon to equip that shield (swaps whatever's currently
   worn back into the bag), same as double-clicking it in your bags.
   Right-clicking the worn shield's own icon does nothing - there's nothing
@@ -24,11 +24,13 @@ the one you're actually wearing) don't quietly go unrepaired.
 - Hold-click (left) anywhere on the group (an icon or the background gap)
   to drag the whole thing. Lock the frame in options to stop accidental
   drags.
-- Two sliders under Display set the grid size: rows (1-6), columns (1-10).
-- The grid freezes (which shield is on which icon) while you're in combat -
-  durability numbers still update live, but reassigning icons has to wait
-  until combat ends, since that's a secure/protected action. Anything that
-  was already on the grid before combat started stays clickable throughout.
+- Two sliders under Display set the bag grid's size: rows (1-6), columns
+  (1-10). The equipped icon is separate and doesn't count against this.
+- The grid freezes completely while you're in combat (durability numbers
+  included) - reassigning which shield is on which icon requires secure/
+  protected changes that can't happen mid-combat, so rather than patch
+  numbers in place, the grid just shows whatever it showed right before
+  combat started and catches up the instant combat ends.
 - `/shs` opens options. `/shs lock`, `/shs unlock`, `/shs reset` also
   work. `/shs dump` opens a copyable text dump of everything read off
   each shield (itemID, link, durability, etc.) - a diagnostic tool, not a

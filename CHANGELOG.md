@@ -2,16 +2,22 @@
 
 ## Unreleased
 
-- Fixed (maybe - unconfirmed): combat-time gold box still landed in the
-  wrong place / drifted across successive screenshots after the guid-
-  tracking fix above. Diagnosed via matched dump+screenshot pairs: a
-  single equip can fire several events in quick succession as WoW's bag-
-  cascade settles (equipping displaces more than just the two slots
-  directly involved - confirmed via `/shs dump`, three items moved from
-  one equip in testing), and applying the combat-time cosmetic refresh on
-  every one of those risked painting a partially-settled intermediate
-  state. Debounced (0.3s) so rapid-fire updates during combat collapse
-  into one, applied only once things settle.
+- Reworked combat handling and the whole equipped-shield display after the
+  guid-tracking fix below turned out not to fully resolve the combat
+  swap-position bug (diagnosed via matched dump+screenshot pairs: a single
+  equip fires several events in quick succession as WoW's bag-cascade
+  settles - confirmed via `/shs dump`, three items moved from one equip in
+  testing - and patching cosmetics in place on every one of those risked
+  painting a partially-settled intermediate state). Per Tek's call: ditched
+  the whole "keep durability live during combat" goal, since it was the
+  entire source of the fragility. The grid now has exactly one layout
+  path - while `InCombatLockdown()` is true, `RefreshLayout` does nothing
+  at all (no cosmetic patching, no debounce, no guid re-matching); it just
+  shows whatever it showed right before combat started and catches up the
+  instant combat ends. The equipped shield no longer needs the gold
+  highlight box to mark it either - it's now always the first icon, with a
+  visual gap before the bag grid, so position alone tells you which one is
+  equipped.
 - Fixed: right-click-to-equip via `type="item"` couldn't reliably target a
   specific shield when you owned two genuinely identical ones (same
   itemID) - `SECURE_ACTIONS.item` (traced in `~/ws/wow-ui-source`) always
