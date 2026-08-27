@@ -26,9 +26,11 @@ one you're actually wearing) don't quietly go unrepaired.
   drags.
 - Two sliders under Display set the bag grid's size: rows (1-6), columns
   (1-10). The equipped icon is separate and doesn't count against this.
-- The equipped icon gets a pulsing warning border when its durability
-  drops at or below a threshold you set under Warnings (0-10%, default
-  5%). Bag spares never glow, only the shield actually taking damage.
+- The equipped icon gets WoW's own "marching ants" proc-alert glow (the
+  animated border used for spell-proc alerts on action bars) when its
+  durability drops at or below a threshold you set under Warnings (0-10%,
+  default 5%). Bag spares never glow, only the shield actually taking
+  damage.
 - "Demo mode" under Settings swaps the grid to 4 synthetic shields (one
   equipped at 5% with the glow on, three bagged at 0/50/100%) so you can
   preview the layout/warning without needing real shields in that state.

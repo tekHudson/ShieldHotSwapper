@@ -102,39 +102,26 @@ local function createButton(i)
 	durText:SetShadowColor(0, 0, 0, 1)
 	btn.durText = durText
 
-	-- Low-durability warning glow on the equipped icon: a pulsing colored
-	-- border, same 4-edge-texture technique as the equipped-shield
-	-- highlight box built earlier this project (since removed in favor of
-	-- fixed positioning, but the technique itself is sound and already
-	-- proven working in-game). First attempt here reused Blizzard's
-	-- "ActionBarButtonSpellActivationAlert" template (the gold proc-alert
-	-- glow) - it's present in the ~/ws/wow-ui-source checkout, but that
-	-- tree apparently doesn't perfectly match what's actually loaded on
-	-- this client: CreateFrame errored "Couldn't find inherited node"
-	-- in-game, crashing addon load entirely. Rebuilt from only
-	-- CreateTexture/OnUpdate - APIs guaranteed present since vanilla, no
-	-- template/utility-function dependency to be wrong about again. A
-	-- border (not a full overlay tint) also avoids covering the icon/
-	-- durability text while pulsing.
-	local GLOW_INSET, GLOW_THICK = 3, 5
-	local glow = {}
-	local function glowEdge(point1, point2)
-		local t = btn:CreateTexture(nil, "OVERLAY", nil, 2)
-		t:SetColorTexture(1, 0.15, 0.05)
-		t:SetPoint(unpack(point1))
-		t:SetPoint(unpack(point2))
-		return t
-	end
-	glow.top = glowEdge({ "TOPLEFT", -GLOW_INSET, GLOW_INSET }, { "TOPRIGHT", GLOW_INSET, GLOW_INSET })
-	glow.top:SetHeight(GLOW_THICK)
-	glow.bottom = glowEdge({ "BOTTOMLEFT", -GLOW_INSET, -GLOW_INSET }, { "BOTTOMRIGHT", GLOW_INSET, -GLOW_INSET })
-	glow.bottom:SetHeight(GLOW_THICK)
-	glow.left = glowEdge({ "TOPLEFT", -GLOW_INSET, GLOW_INSET }, { "BOTTOMLEFT", -GLOW_INSET, -GLOW_INSET })
-	glow.left:SetWidth(GLOW_THICK)
-	glow.right = glowEdge({ "TOPRIGHT", GLOW_INSET, GLOW_INSET }, { "BOTTOMRIGHT", GLOW_INSET, -GLOW_INSET })
-	glow.right:SetWidth(GLOW_THICK)
-	for _, t in pairs(glow) do t:Hide() end
-	btn.glow = glow
+	-- Low-durability warning glow on the equipped icon: WoW's own "marching
+	-- ants" proc-alert border art
+	-- (Interface\SpellActivationOverlay\IconAlertAnts, a 256x256 sprite
+	-- sheet, 48x48px per frame, 22 frames), animated by hand via
+	-- SetTexCoord instead of the Blizzard glue code that normally drives it
+	-- (ActionButton_ShowOverlayGlow / the "ActionBarButtonSpellActivation
+	-- Alert" template) - confirmed twice now that neither exists on this
+	-- client: CreateFrame on the template errored outright the first time;
+	-- pcall'd ActionButton_ShowOverlayGlow silently no-op'd the second
+	-- (Tek's screenshot showed only a plain fallback border, not this
+	-- effect). The raw texture FILE is a data asset bundled regardless of
+	-- which Lua/XML code references it, and SetTexture on a bad path fails
+	-- silently (no crash) unlike CreateFrame on a bad template, so it's
+	-- safe to just try directly.
+	local ants = btn:CreateTexture(nil, "OVERLAY", nil, 3)
+	ants:SetSize(ICON * 1.4, ICON * 1.4)
+	ants:SetPoint("CENTER", btn, "CENTER")
+	ants:SetTexture("Interface\\SpellActivationOverlay\\IconAlertAnts")
+	ants:Hide()
+	btn.ants = ants
 
 	btn:SetScript("OnEnter", function(self)
 		if not self.kind then return end
@@ -206,28 +193,27 @@ local function setItemAttr(btn, entry)
 	end
 end
 
--- Pulses the shown glow border's alpha via a plain sine wave - no
--- animation-group/template machinery, just elapsed time. Driven off the
--- button's own OnUpdate (not otherwise used) since the border is 4
--- separate edge textures, not one object.
-local function glowPulse(btn, elapsed)
-	btn.glowT = (btn.glowT or 0) + elapsed
-	local alpha = 0.1 + 0.9 * (0.5 + 0.5 * math.sin(btn.glowT * 6))
-	for _, t in pairs(btn.glow) do t:SetAlpha(alpha) end
-end
+-- Marching-ants sprite sheet layout (see createButton): 256x256 texture,
+-- 48x48px frames -> floor(256/48) = 5 columns (240px used, 16px unused
+-- margin on the sheet - matches Blizzard's own AnimateTexCoords math,
+-- replicated by hand here rather than calling that function directly).
+local ANTS_COLS = 5
+local ANTS_FRAME_UV = 48 / 256
+local ANTS_FRAME_COUNT = 22
+local ANTS_FPS = 24
 
--- Blizzard's own proc-alert glow (the gold pulsing/ants effect from action
--- bars) is nicer than a plain colored border, but ActionButton_
--- ShowOverlayGlow internally does CreateFrame(..., "ActionBarButton
--- SpellActivationAlert") - the exact template that already crashed addon
--- load once on this client (see the long comment in createButton). Tried
--- again here specifically at Tek's request, wrapped in pcall so a repeat
--- failure degrades to the custom border instead of crashing again.
--- hasOverlayGlow starts optimistic and latches false permanently after
--- the first failure, so we don't keep re-attempting (and re-pcall'ing) a
--- doomed call on every single glow toggle.
-local hasOverlayGlow = type(_G.ActionButton_ShowOverlayGlow) == "function"
-	and type(_G.ActionButton_HideOverlayGlow) == "function"
+-- Steps the ants texture's SetTexCoord to the next sprite-sheet frame -
+-- no animation-group/template machinery, just elapsed time. Driven off
+-- the button's own OnUpdate (not otherwise used).
+local function glowPulse(btn, elapsed)
+	btn.antsT = (btn.antsT or 0) + elapsed
+	local frame = math.floor(btn.antsT * ANTS_FPS) % ANTS_FRAME_COUNT
+	local col = frame % ANTS_COLS
+	local row = math.floor(frame / ANTS_COLS)
+	local left = col * ANTS_FRAME_UV
+	local top = row * ANTS_FRAME_UV
+	btn.ants:SetTexCoord(left, left + ANTS_FRAME_UV, top, top + ANTS_FRAME_UV)
+end
 
 -- Shows/hides a button's low-durability glow (see createButton), no-op if
 -- already in the requested state. Only ever called for the equipped icon -
@@ -236,20 +222,13 @@ local hasOverlayGlow = type(_G.ActionButton_ShowOverlayGlow) == "function"
 local function setLowDurabilityGlow(btn, show)
 	if show == btn.glowShown then return end
 	btn.glowShown = show
-
-	if hasOverlayGlow then
-		local ok = pcall(show and ActionButton_ShowOverlayGlow or ActionButton_HideOverlayGlow, btn)
-		if ok then return end
-		hasOverlayGlow = false -- fall through to the custom border below, and stop trying this path
-	end
-
 	if show then
-		btn.glowT = 0
-		for _, t in pairs(btn.glow) do t:Show() end
+		btn.antsT = 0
+		btn.ants:Show()
 		btn:SetScript("OnUpdate", glowPulse)
 	else
 		btn:SetScript("OnUpdate", nil)
-		for _, t in pairs(btn.glow) do t:Hide() end
+		btn.ants:Hide()
 	end
 end
 

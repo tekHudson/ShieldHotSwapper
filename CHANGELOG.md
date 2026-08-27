@@ -2,24 +2,21 @@
 
 ## Unreleased
 
-- Added a low-durability warning glow on the equipped shield icon: a
-  pulsing colored border (plain `CreateTexture` + `OnUpdate`, same 4-edge
-  technique as an earlier highlight box in this project). First attempt
-  reused Blizzard's action-bar "spell activation alert" template (the gold
-  proc-alert glow) - present in the `~/ws/wow-ui-source` checkout, but
-  that tree apparently doesn't perfectly match what's actually loaded on
-  this client: `CreateFrame` errored `Couldn't find inherited node` in
-  practice, crashing addon load entirely. Rebuilt from only
-  `CreateTexture`/`OnUpdate`, APIs guaranteed present since vanilla.
-  Threshold is a new 0-10% slider under a "Warnings" section in options
-  (default 5%). Bag spares never glow, only the equipped shield.
-- Tried Blizzard's proc-alert glow again, per request, since it looks
-  nicer than a plain border - `ActionButton_ShowOverlayGlow`/
-  `HideOverlayGlow` internally use the exact template that crashed the
-  client before, so this time it's function-existence-checked and
-  `pcall`-wrapped, permanently falling back to the custom border on any
-  failure. Either the real Blizzard glow or the fallback border always
-  ends up showing - never another crash.
+- Added a low-durability warning glow on the equipped shield icon: WoW's
+  own "marching ants" proc-alert border art
+  (`Interface\SpellActivationOverlay\IconAlertAnts`, a 256x256 sprite
+  sheet), animated by hand via `SetTexCoord` - not the Blizzard glue code
+  that normally drives it (`ActionButton_ShowOverlayGlow`, or the
+  `"ActionBarButtonSpellActivationAlert"` XML template it depends on),
+  since neither actually exists on this client despite being present in
+  the `~/ws/wow-ui-source` checkout: `CreateFrame` on the template errored
+  outright the first attempt (crashing addon load entirely), and a
+  `pcall`-guarded retry of the Blizzard function silently no-op'd the
+  second. The raw texture *file* is just a data asset, though, bundled
+  regardless of which Lua/XML code references it - `SetTexture` on a bad
+  path fails silently rather than crashing, so animating it by hand
+  worked. Threshold is a new 0-10% slider under a "Warnings" section in
+  options (default 5%). Bag spares never glow, only the equipped shield.
 - Added "Demo mode" (checkbox in Settings): swaps the grid to 4 synthetic
   shields (equipped at 5% with the low-durability glow on, three bagged at
   0/50/100%) to preview layout/warnings without needing real shields in
