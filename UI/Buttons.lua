@@ -116,7 +116,7 @@ local function createButton(i)
 	-- template/utility-function dependency to be wrong about again. A
 	-- border (not a full overlay tint) also avoids covering the icon/
 	-- durability text while pulsing.
-	local GLOW_INSET, GLOW_THICK = 3, 3
+	local GLOW_INSET, GLOW_THICK = 3, 5
 	local glow = {}
 	local function glowEdge(point1, point2)
 		local t = btn:CreateTexture(nil, "OVERLAY", nil, 2)
@@ -212,7 +212,7 @@ end
 -- separate edge textures, not one object.
 local function glowPulse(btn, elapsed)
 	btn.glowT = (btn.glowT or 0) + elapsed
-	local alpha = 0.35 + 0.45 * (0.5 + 0.5 * math.sin(btn.glowT * 4))
+	local alpha = 0.1 + 0.9 * (0.5 + 0.5 * math.sin(btn.glowT * 6))
 	for _, t in pairs(btn.glow) do t:SetAlpha(alpha) end
 end
 
