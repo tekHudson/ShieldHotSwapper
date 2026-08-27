@@ -120,6 +120,7 @@ local function createButton(i)
 	ants:SetSize(ICON * 1.4, ICON * 1.4)
 	ants:SetPoint("CENTER", btn, "CENTER")
 	ants:SetTexture("Interface\\SpellActivationOverlay\\IconAlertAnts")
+	ants:SetVertexColor(1, 1, 0) -- bright yellow tint, per feedback
 	ants:Hide()
 	btn.ants = ants
 
@@ -200,7 +201,7 @@ end
 local ANTS_COLS = 5
 local ANTS_FRAME_UV = 48 / 256
 local ANTS_FRAME_COUNT = 22
-local ANTS_FPS = 24
+local ANTS_FPS = 48 -- doubled per feedback ("marching ants speed double")
 
 -- Steps the ants texture's SetTexCoord to the next sprite-sheet frame -
 -- no animation-group/template machinery, just elapsed time. Driven off
