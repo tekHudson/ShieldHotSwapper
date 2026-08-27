@@ -1,7 +1,7 @@
 --[[ ShieldHotSwapper — icon grid: pool of secure buttons, one per
 displayed shield, laid out into the rows x columns grid from options.
 
-Buttons use SecureActionButtonTemplate (type2="item", right-click) so
+Buttons use SecureActionButtonTemplate (type2="macro", right-click) so
 click-to-equip survives combat lockdown - a plain insecure button calling
 UseContainerItem() during combat gets its equip silently downgraded to
 just picking the item up onto the cursor, which is exactly the bug this
@@ -63,8 +63,8 @@ local function createButton(i)
 	-- SecureButton_GetModifiedAttribute) rather than guess further after
 	-- two failed attempts. Confirmed: the attribute actually looked up is
 	-- "type"..SecureButton_GetButtonSuffix(button), where RightButton maps
-	-- to suffix "2" - so a right-click reads exactly type2/item2 (set in
-	-- setItemAttr below). SecureActionButton_OnClick also only fires the
+	-- to suffix "2" - so a right-click reads exactly type2/macrotext2 (set
+	-- in setItemAttr below). SecureActionButton_OnClick also only fires the
 	-- action when the click's down/up state matches useOnKeyDown
 	-- (SecureActionButton_ShouldUseOnKeyDown falls back to the player's
 	-- "ActionButtonUseKeyDown" CVar - invisible to the addon - if it isn't
@@ -139,7 +139,7 @@ local function createButton(i)
 	btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 	-- No OnClick script: right-click-to-equip is handled entirely by the
-	-- secure type2="item" attribute set in setItemAttr below. Setting a raw
+	-- secure type2="macro" attribute set in setItemAttr below. Setting a raw
 	-- OnClick on a SecureActionButtonTemplate button would replace its
 	-- protected click dispatch with insecure Lua - exactly the bug being
 	-- fixed here.
@@ -173,17 +173,32 @@ end
 
 -- Secure attribute changes are combat-locked just like structural changes
 -- (position/size) - only ever called from the non-combat path below.
--- type2/item2 = right click (RightButton -> suffix "2", see the
+-- type2/macrotext2 = right click (RightButton -> suffix "2", see the
 -- RegisterForClicks comment in createButton for why right-click and not
 -- left).
+--
+-- Deliberately type="macro" + "/use bag slot", NOT type="item" + a link.
+-- Traced SECURE_ACTIONS.item in SecureTemplates.lua: for an equippable,
+-- not-yet-equipped item it always calls C_Item.EquipItemByName(name) using
+-- just the resolved link/name - bag/slot gets parsed out but then thrown
+-- away. Two genuinely identical shields have byte-identical links (no
+-- uniqueID component - confirmed via /shs dump), so EquipItemByName can't
+-- tell them apart and just grabs whichever instance it finds, regardless
+-- of which specific button/slot was clicked (Tek's report: right-clicking
+-- the second of a duplicate pair didn't equip that one, and the grid
+-- sometimes reshuffled - both explained by the wrong physical item getting
+-- equipped). A macro's "/use <bag> <slot>" is parsed natively (through
+-- WoW's real macro-command interpreter, not this Lua item handler) and
+-- targets the container slot directly, with no name/link resolution at
+-- all - unambiguous even for exact duplicates.
 local function setItemAttr(btn, entry)
 	if InCombatLockdown() then return end
 	if entry.kind == "bag" then
-		btn:SetAttribute("type2", "item")
-		btn:SetAttribute("item2", entry.link)
+		btn:SetAttribute("type2", "macro")
+		btn:SetAttribute("macrotext2", "/use " .. entry.bag .. " " .. entry.slot)
 	else
 		btn:SetAttribute("type2", nil)
-		btn:SetAttribute("item2", nil)
+		btn:SetAttribute("macrotext2", nil)
 	end
 end
 
