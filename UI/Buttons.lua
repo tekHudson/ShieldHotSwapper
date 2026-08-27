@@ -216,6 +216,19 @@ local function glowPulse(btn, elapsed)
 	for _, t in pairs(btn.glow) do t:SetAlpha(alpha) end
 end
 
+-- Blizzard's own proc-alert glow (the gold pulsing/ants effect from action
+-- bars) is nicer than a plain colored border, but ActionButton_
+-- ShowOverlayGlow internally does CreateFrame(..., "ActionBarButton
+-- SpellActivationAlert") - the exact template that already crashed addon
+-- load once on this client (see the long comment in createButton). Tried
+-- again here specifically at Tek's request, wrapped in pcall so a repeat
+-- failure degrades to the custom border instead of crashing again.
+-- hasOverlayGlow starts optimistic and latches false permanently after
+-- the first failure, so we don't keep re-attempting (and re-pcall'ing) a
+-- doomed call on every single glow toggle.
+local hasOverlayGlow = type(_G.ActionButton_ShowOverlayGlow) == "function"
+	and type(_G.ActionButton_HideOverlayGlow) == "function"
+
 -- Shows/hides a button's low-durability glow (see createButton), no-op if
 -- already in the requested state. Only ever called for the equipped icon -
 -- bag spares don't warrant the warning, only the shield actually taking
@@ -223,6 +236,13 @@ end
 local function setLowDurabilityGlow(btn, show)
 	if show == btn.glowShown then return end
 	btn.glowShown = show
+
+	if hasOverlayGlow then
+		local ok = pcall(show and ActionButton_ShowOverlayGlow or ActionButton_HideOverlayGlow, btn)
+		if ok then return end
+		hasOverlayGlow = false -- fall through to the custom border below, and stop trying this path
+	end
+
 	if show then
 		btn.glowT = 0
 		for _, t in pairs(btn.glow) do t:Show() end

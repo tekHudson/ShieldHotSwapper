@@ -13,6 +13,13 @@
   `CreateTexture`/`OnUpdate`, APIs guaranteed present since vanilla.
   Threshold is a new 0-10% slider under a "Warnings" section in options
   (default 5%). Bag spares never glow, only the equipped shield.
+- Tried Blizzard's proc-alert glow again, per request, since it looks
+  nicer than a plain border - `ActionButton_ShowOverlayGlow`/
+  `HideOverlayGlow` internally use the exact template that crashed the
+  client before, so this time it's function-existence-checked and
+  `pcall`-wrapped, permanently falling back to the custom border on any
+  failure. Either the real Blizzard glow or the fallback border always
+  ends up showing - never another crash.
 - Added "Demo mode" (checkbox in Settings): swaps the grid to 4 synthetic
   shields (equipped at 5% with the low-durability glow on, three bagged at
   0/50/100%) to preview layout/warnings without needing real shields in
