@@ -21,6 +21,19 @@
   equip a shield in Classic Era/SoD.
 - The grid only shows once you own 2+ shields total (worn + bagged) -
   nothing to display with 0 or 1.
+- Fixed: equipping a shield in combat made icons appear to swap places
+  while the gold box stayed put. The combat-time cosmetic refresh matched
+  buttons back to fresh shield data by kind+location (bag/slot or
+  invSlot), but equipping moves an item from a bag slot to the equip slot
+  and moves whatever was worn into a bag slot (often the exact slot just
+  vacated) - so the button that used to be "the equipped slot" picked up
+  whichever item is equipped now, and the button that vacated its bag slot
+  picked up whatever landed there. Now matches by each shield's guid (the
+  same stable per-physical-item identity used for sorting), which doesn't
+  change when an item moves between a bag and the equip slot - every
+  button keeps showing the same physical shield throughout combat, and
+  only the gold box (recomputed from whichever guid is currently equipped)
+  moves.
 
 ## 0.1.2 - 2026-08-27
 

@@ -206,6 +206,7 @@ local function fillButton(btn, entry)
 	btn.kind = entry.kind
 	btn.bag, btn.slot = entry.bag, entry.slot
 	btn.invSlot = entry.invSlot
+	btn.guid = entry.guid -- combat-time cosmetic refresh tracks by this, see updateCosmeticsOnly
 	btn.icon:SetTexture(entry.icon)
 	local isWorn = entry.kind == "equipped"
 	for _, t in pairs(btn.worn) do t:SetShown(isWorn) end
@@ -228,10 +229,30 @@ local function placeButton(btn, index, cols)
 end
 
 -- Match each already-placed button back to its current entry in a fresh
--- scan, by the identity that doesn't change between scans (kind + where it
--- is). Used to refresh durability/coloring in combat without touching
--- position, size, or secure attributes on any button.
+-- scan. MUST be by guid (the stable per-physical-item identity from
+-- Core/Scan.lua), not by kind+location: equipping something during combat
+-- moves it from a bag slot to the equip slot and moves whatever was worn
+-- into a bag slot (often the exact slot that was just vacated) - matching
+-- by kind+location would find "whatever is equipped now" for the button
+-- that used to BE the equipped slot (wrong: that button should keep
+-- showing the specific physical item it was showing before combat) and
+-- "whatever landed in that bag slot" for the button that vacated it
+-- (equally wrong). That bug shipped once already: icons appeared to swap
+-- places while the gold box stayed put, because kind/location matching
+-- silently reassigned which physical item each button displayed. guid
+-- doesn't change when an item moves between a bag and the equip slot, so
+-- matching by it keeps each button showing the same physical shield all
+-- the way through combat - only the worn/gold-box state (computed
+-- separately below, from whichever guid is currently equipped) moves.
+-- Falls back to the old kind+location match if guid is missing (defensive
+-- only - see Core/Scan.lua's itemGUID(), pcall-wrapped for the same
+-- reason).
 local function findMatchingEntry(shields, btn)
+	if btn.guid then
+		for _, entry in ipairs(shields) do
+			if entry.guid == btn.guid then return entry end
+		end
+	end
 	for _, entry in ipairs(shields) do
 		if entry.kind == btn.kind then
 			if entry.kind == "equipped" then
@@ -244,8 +265,25 @@ local function findMatchingEntry(shields, btn)
 	return nil
 end
 
+-- Note: a shield that gets newly equipped mid-combat, displacing whatever
+-- was worn, leaves the displaced item's button without a working
+-- right-click (its secure macrotext2 was never set, since it was the
+-- equipped-slot button - no attribute needed - up until this moment, and
+-- secure attributes can't be set during combat). It'll look and read
+-- correct (icon/durability/gold-box all update via guid matching above);
+-- it just can't be swapped again itself until combat ends and a full
+-- RefreshLayout re-arms every button's attributes.
 local function updateCosmeticsOnly()
 	local shields = SW.shields or {}
+
+	local equippedGuid
+	for _, entry in ipairs(shields) do
+		if entry.kind == "equipped" then
+			equippedGuid = entry.guid
+			break
+		end
+	end
+
 	for _, btn in ipairs(SW.buttons) do
 		if btn.kind then
 			local entry = findMatchingEntry(shields, btn)
@@ -257,6 +295,9 @@ local function updateCosmeticsOnly()
 				btn.durText:SetTextColor(r, g, b)
 				btn.ring:SetColorTexture(r, g, b, 1)
 			end
+
+			local isWorn = btn.guid ~= nil and btn.guid == equippedGuid
+			for _, t in pairs(btn.worn) do t:SetShown(isWorn) end
 		end
 	end
 end
