@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.5 - 2026-08-27
+
 - Added a low-durability warning glow on the equipped shield icon: WoW's
   own "marching ants" proc-alert border art
   (`Interface\SpellActivationOverlay\IconAlertAnts`, a 256x256 sprite
@@ -17,6 +19,7 @@
   path fails silently rather than crashing, so animating it by hand
   worked. Threshold is a new 0-10% slider under a "Warnings" section in
   options (default 5%). Bag spares never glow, only the equipped shield.
+  Tuned per feedback: animation speed doubled, tinted bright yellow.
 - Added "Demo mode" (checkbox in Settings): swaps the grid to 4 synthetic
   shields (equipped at 5% with the low-durability glow on, three bagged at
   0/50/100%) to preview layout/warnings without needing real shields in
