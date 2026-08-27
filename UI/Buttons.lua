@@ -302,6 +302,18 @@ local function updateCosmeticsOnly()
 	end
 end
 
+-- Equipping something during combat can fire several events in quick
+-- succession as WoW's bag-cascade settles (PLAYER_EQUIPMENT_CHANGED,
+-- multiple BAG_UPDATE_DELAYED, UPDATE_INVENTORY_DURABILITY) - see the long
+-- comment on findMatchingEntry for why a single equip reshuffles more than
+-- just the two slots involved. Applying updateCosmeticsOnly on every one of
+-- those risked painting a partially-settled intermediate bag state (Tek
+-- saw the gold box land in different places across screenshots taken
+-- seconds apart with no user action in between - a strong signal of this).
+-- Debounced so rapid-fire calls collapse into a single update once things
+-- actually settle, instead.
+local combatUpdateTimer
+
 function SW:RefreshLayout()
 	if not SW.buttons then return end
 
@@ -322,10 +334,18 @@ function SW:RefreshLayout()
 	-- moment combat ends, via PLAYER_REGEN_ENABLED above.
 	if InCombatLockdown() then
 		SW.layoutPending = true
-		updateCosmeticsOnly()
+		if combatUpdateTimer then combatUpdateTimer:Cancel() end
+		combatUpdateTimer = C_Timer.NewTimer(0.3, function()
+			combatUpdateTimer = nil
+			updateCosmeticsOnly()
+		end)
 		return
 	end
 	SW.layoutPending = false
+	if combatUpdateTimer then
+		combatUpdateTimer:Cancel()
+		combatUpdateTimer = nil
+	end
 
 	local shields = SW.shields or {}
 

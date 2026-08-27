@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Fixed (maybe - unconfirmed): combat-time gold box still landed in the
+  wrong place / drifted across successive screenshots after the guid-
+  tracking fix above. Diagnosed via matched dump+screenshot pairs: a
+  single equip can fire several events in quick succession as WoW's bag-
+  cascade settles (equipping displaces more than just the two slots
+  directly involved - confirmed via `/shs dump`, three items moved from
+  one equip in testing), and applying the combat-time cosmetic refresh on
+  every one of those risked painting a partially-settled intermediate
+  state. Debounced (0.3s) so rapid-fire updates during combat collapse
+  into one, applied only once things settle.
 - Fixed: right-click-to-equip via `type="item"` couldn't reliably target a
   specific shield when you owned two genuinely identical ones (same
   itemID) - `SECURE_ACTIONS.item` (traced in `~/ws/wow-ui-source`) always
