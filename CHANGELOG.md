@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.3 - 2026-08-27
+
 - Reworked combat handling and the whole equipped-shield display after the
   guid-tracking fix below turned out not to fully resolve the combat
   swap-position bug (diagnosed via matched dump+screenshot pairs: a single
