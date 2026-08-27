@@ -264,6 +264,17 @@ end
 function SW:RefreshLayout()
 	if not SW.buttons then return end
 
+	-- Nothing to monitor with 0-1 total shields (worn + bagged combined) -
+	-- there's no "which one is worn" question to answer yet, so don't even
+	-- show the group. Safe to check/toggle regardless of combat: this is
+	-- visibility on the plain (non-secure) container frame, not a
+	-- structural or attribute change on any of the secure icon buttons.
+	if #(SW.shields or {}) < 2 then
+		SW.frame:Hide()
+		return
+	end
+	SW.frame:Show()
+
 	-- Combat lockdown: can't reassign/reposition/resize secure buttons, so
 	-- freeze the grid as-is and just refresh numbers on whatever's already
 	-- placed. Full layout (including any new/removed shields) applies the

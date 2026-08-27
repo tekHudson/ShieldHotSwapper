@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+- Fixed: right-click-to-equip via `type="item"` couldn't reliably target a
+  specific shield when you owned two genuinely identical ones (same
+  itemID) - `SECURE_ACTIONS.item` (traced in `~/ws/wow-ui-source`) always
+  calls `C_Item.EquipItemByName(name)` using just the item's link for an
+  equippable/unworn item, discarding bag/slot entirely. Two duplicates
+  have byte-identical links (no uniqueID component), so it couldn't tell
+  them apart and grabbed whichever instance it found, regardless of which
+  icon was clicked. Switched to `type="macro"` with `/use <bag> <slot>`,
+  which targets the container slot directly through WoW's real
+  macro-command interpreter - unambiguous even for exact duplicates.
+- Fixed: 0.1.2's initial secure-button attempt didn't survive combat
+  after all - traced the actual dispatch chain in
+  `SecureTemplates.lua` and switched equip to right-click specifically
+  (`type2`/`macrotext2`) with `useOnKeyDown` set explicitly, so it can't
+  race the left-click drag-to-move gesture.
+- Only loads for Warrior/Paladin/Shaman now - the only classes that can
+  equip a shield in Classic Era/SoD.
+- The grid only shows once you own 2+ shields total (worn + bagged) -
+  nothing to display with 0 or 1.
+
 ## 0.1.2 - 2026-08-27
 
 - Fixed: clicking an icon to equip it while in combat picked the item up

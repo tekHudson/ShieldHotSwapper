@@ -4,6 +4,12 @@ Shows your currently-equipped shield plus every shield sitting in your bags
 as a small icon grid, with live durability, so spare/resistance shields (and
 the one you're actually wearing) don't quietly go unrepaired.
 
+- Only loads for Warrior/Paladin/Shaman - the only classes that can equip a
+  shield in Classic Era/SoD. Prints a one-line "disabled" message and does
+  nothing else on any other class.
+- The grid itself only shows once you own 2+ shields total (worn + bagged
+  combined) - with 0 or 1, there's no "which one is worn" question to
+  answer yet, so there's nothing worth displaying.
 - All icons are always visible: one icon per shield you own, worn or in a
   bag, sorted most-damaged first. Equipping a shield doesn't reshuffle the
   icons - the gold outline box just moves to whichever icon is now worn.

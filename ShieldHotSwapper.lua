@@ -19,6 +19,10 @@ ns.ADDON = ADDON
 ----------------------------------------------------------------------
 SW.version = C_AddOns.GetAddOnMetadata(ADDON, "Version") or "0.0"
 
+-- Classic Era / SoD classes that can equip a shield at all. No point
+-- loading any of this for a class that can never wear one.
+local SHIELD_CLASSES = { WARRIOR = true, PALADIN = true, SHAMAN = true }
+
 -- Shared icon-grid geometry (UI/Frame.lua and UI/Buttons.lua both need these
 -- to agree on frame sizing vs. button placement).
 ns.ICON = 36
@@ -96,6 +100,12 @@ function SW:ADDON_LOADED(_, name)
 end
 
 function SW:PLAYER_LOGIN()
+	local _, class = UnitClass("player")
+	if not SHIELD_CLASSES[class] then
+		SW:Print("disabled — this class can't equip a shield.")
+		return
+	end
+
 	SW:InitScan()   -- Core/Scan.lua: builds SW.shields, wires rescan events
 	SW:InitUI()     -- UI/Frame.lua + UI/Buttons.lua + UI/Options.lua
 
